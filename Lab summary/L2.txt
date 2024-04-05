@@ -1,0 +1,170 @@
+ 
+entro dentro al docker folder e apro il terminale
+faccio partire questo file:
+
+    ./run_docker_vnc.sh
+
+in un altro terminale faccio partire
+
+    ./run_vnc.sh
+
+sempre nel secondo: per controllare che tutto funzioni correttamente faccio:
+
+    docker ps
+
+dovrei vedere due container runnare: novnc e robotics
+
+ora apro il browser e vado su localhost:8080 e clicco su vnc e su connect -> dovrei avere il desktop
+
+-----------------------
+
+        torniamo al 1° terminale: usiamo tmux per aprire diversi terminali contemporaneamente
+        creo il nuovo terminale
+
+        tmux new -s session1 (dove session1 è il nome che gli do)
+
+        [non devo farlo, ma se per sbaglio esco dalla sessione di tmux e voglio rientrare, allora posso scrivere: tmux a]
+        [due modi per uscire da un terminal: ctrl+b d, oppure scrivo tmux detach, per rientrare tmux a]
+
+        per splittare il terminale in multiple windows:
+
+        ctrl+b "
+
+        Per spostarsi da un terminale all'altro:
+
+        ctrl+b e uso la freccia
+
+        se ho più sessioni di tmux attive, prima di fare tmux a, posso vedere quali sono scrivendo
+
+        tmux ls
+
+        per riconnettermi ad una sessione specifica
+
+        tmux a -t session 1 (specifico il nome della sessione)
+
+        per scorrere il terminale: entro dentro alla scroll mode
+
+        ctrl+b [  (se voglio uscirne faccio ctrl+c)
+
+---------------------
+
+faccio partire roscore: nel primo terminale di tmux faccio
+
+    roscore (e non devo stopparlo)
+
+nel secondo tmux posso vedere cosa sta succedendo
+
+    rostopic list
+
+vediamo cosa succede in questa network (voglio vedere tutti i nodi che stanno runnando in questa network)
+
+    rosnode list
+
+per vedere le informazioni specifiche di un nodo
+
+    rosnode info /rosout (dove rosout è il nome del nodo)
+
+Questo mi mostra sotto Publications nelle quadre [il tipo di messaggio] e da chi è pubblicato
+sotto Services mostra i servizi implementati nel nodo
+e poi sotto mostra l'ip della network
+
+Posso usare il comando rostopic info anche per i rostopic list (è un comando utile per capire se la connessione tra i nodi sta funzionando: guardo se ci sono dei subscribers)
+
+per pubblicare qualcosa sulla network
+
+    rostopic pub /data std_msgs/String "data: 'test'" (dove /data è il topic, std_msgs/String è il tipo di messaggio, il dato che sto mandando è test)
+
+se poi nel terzo tmux faccio rostopic list, posso vedere i messaggi
+
+per vedere se contiene effettivente le informazioni che volevo (in questo caso "test") posso fare
+
+    rostopic echo /data
+
+il messaggio viene pubblicato come un latched message: viene mandato una sola volta quando c'è un nuovo subscriber: posso anche fare altri tipi di messaggio
+
+    rostopic pub --once /data std_msgs/String "data: 'test'"
+
+questo pubblica il messaggio solo per 3 secondi e poi returna.
+Se invece voglio pubblicare i messaggi ad una specifica frequenza
+
+    rostopic pub -r 10 /data std_msgs/String "data: 'test'"
+
+Questo sta pubblicando ad una frequenza di 10 Hz
+
+Nel terzo tmux: Per controllare la frequenza alla quale stanno arrivando i messaggi
+
+rostopic hz /data
+
+------------------------
+
+Nel secondo tmux avvio turtlesim
+
+    rosrun turtlesim turtlesim_node
+
+Poi se mi connetto al vnc dovrei vedere la finestra con la tartaruga
+
+Nel terzo tmux: Per controllare turtlesim
+
+    rosrun turtlesim turtle_teleop_key
+
+(se muovo le frecce, si muove la tartaruga)
+
+Possiamo anche controllare cosa sta succedendo nella nostra network:
+
+    rostopic list (vedo i topic)
+    rosnode list (vedo i nodi)
+    rosnode info /turtlesim (mi permette di vedere publisher & subscriber)
+
+Comando per vedere i nodi che runnano e come sono connessi
+
+    rqt_graph
+
+A questo punto nella gui mi mostra una finestra con nodi e come sono connessi
+
+Un altro tool che funziona nella gui
+
+    rqt_topic
+
+Monitora i topic che stanno runnando nella network (bandwidth, Hz)
+
+Se invece voglio monitorare i valori in real time:
+
+    rostopic echo /turtle1/pose
+
+(mi permette di vedere come cambia la posizione della turtle1)
+
+Proviamo a chiamare i servizi:
+
+    rosnode info /turtlesim
+    rosservice call /clear     (questo comando pulisce la gui)
+
+(ci sono anche servizi che non ritornano niente)
+
+Per avere informazioni su un particolare servizio:
+
+    rosservice info /spawn
+
+Vedo gli args (gli arguments che si aspetta di ricevere)
+
+    es. rosservice call /spawn 10 10 0 test
+
+(questo spawna un altra turtle)
+Per muoverla lanciamo: rosrun turtlesim turtle_teleop_key
+(possiamo muovere solo 1 tartaruga alla volta)
+
+Posso rimappare lo standar topic ad un altro in modo che cambi il subscriber
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

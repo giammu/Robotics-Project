@@ -1,0 +1,8 @@
+<launch> 
+ <param name="name" value="first" /> <!-- così settiamo i parametres values: name=il nome del parametro da settare, first=la stringa -->
+ 
+ <node pkg="parameter_test" name="param_first" type="param_first" output="screen">
+  <param name="name" value="second" />
+ </node>
+
+</launch>

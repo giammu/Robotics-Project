@@ -1,0 +1,133 @@
+
+Riprendiamo da dove abbiamo finito la scorsa volta
+
+Questa lezione e la prossima vediamo i componenti basici di ros
+(
+la scorsa volta abbiamo visto pub e sub
+per runnare qualcosa si fa:
+    rosrun nomepackage nomenodo
+)
+
+Inoltre aggiungiamo che nelle cartelle launch: ci sono file utili ma non mandatori, che servono per l'avvio (vedi commento)
+
+-Per i launchfile non devo far partire roscore, perchè ci pensa lui
+-Se ho multipli launchfile, è meglio avere roscore che runna in un diverso terminale perchè altrimenti ogni launchfile avvia roscore
+
+i launch file si fanno partire con roslaunch:
+
+    roslaunch pub_sub multi_turtle.launch   (n.b. posso premere tab per scrivere automaticamente)
+
+Quindi usando il launchfile faccio partire tutti quei comandi che la scorsa volta avevamo scritto a mano
+
+Per vedere i publisher e subscribers uso:
+    rqt_graph
+
+-------------------------------------
+Ora vediamo i CUSTOM MESSAGES:
+ros ha un set di messaggi che si possono usare per oubblicare le informazioni
+Ci possono essere scenari in cui gli standard ros messages non sono abbastanza
+
+vado nel package custom_messages, e apro msg, num.msg: contiene solo un intero a 64 bits
+Il msg file va compilato: inserisco qualche linea nel cmakelist (vedi commenti)
+
+Inoltre devo aggiungere qualche linea anche al publisher e al subscriber (vedi commenti)
+
+Ora compilo usando:
+    catkin_make
+
+Ora voglio runnare i nodi:
+    rosrun custom_messages pub_custom
+    rosrun custom_messages sub_custom
+
+Per vedere i messaggi faccio:
+    rostopic list     (e vedo che il topic è /chatter)
+    rostopic echo /chatter
+
+Complicano la situazione sia nella registrazione sia nella visualizzazione perchè chi lo vuole vedere deve sapere come è fatto il custom message, e se ho più robot devo compilare il custom message su ogni robot
+
+La cosa più comoda da fare è prendere dei messaggi che contengono già i fields che mi interessano
+
+--------------------------
+ORA VEDIAMO I SERVICES
+Sono più utili e più usati dei custom messages.
+è un nodo che performa una task specifica
+
+Come si creano? é simile a come si creano i custom messages
+Vedi src/services/srv/addtwoints.srv
+Definisco i fields del mio service, poi gli input e gli output
+
+Il server del mio service è in services/src/addtwoints.cpp
+In generale attende che qualcuno lo chiami, riceve i dati, fornisce il risultato
+
+Il client del mio server è in services/src/client.cpp
+
+Quindi per creare un servizio devo definire: il file del service (definisce input+output), poi creo il server, che similmente a un subscriber si aspetta i risultati, e poi creo un client che crea un messaggio con i fields giusti, chiama il servizio e ritorna con true o false
+
+Per runnarlo faccio:
+    rosrun service add_two_int      (fa partire il servizio)
+    rosrun service client 1 2       (fa partire il nodo client che si aspetta 2 interi)
+
+---------------------------
+VEDIAMO COME FUNZIONANO I TIMER
+
+Tutto quelle cose time-related vengono solitamente gestite dal loop
+Se voglio delle callback ad uno specifico rate, uso i timers (ma di soluto non si usano)
+
+I timers sono simili ai subscribers per quello che fanno
+
+vediamo src/timer/src/pub.cpp
+La funzione più importante è ros::Time::now() -> voglio conoscere il current timestamp
+
+---------------------------
+ORA VEDIAMO UN ES. DI PUB SUB CON PIÙ DI 1 PUBLISHER E SUBSCRIBER
+
+[Nel prj viene richiesto di fare multiple task at the same time: subscribe e publish ]
+
+apriamo src/pub_sub_same/src/test_sub.cpp
+apriamo src/pub_sub_same/src/test_pub.cpp
+
+----------------------------
+ORA VEDIAMO I PARAMETERS
+
+I parameters si usano quando non voglio ricompilare ogni volta il nodo se cambio qualche numero -> non voglio tenere tutto dentro ai nodi
+
+Ci sono 2 modi per settare i parametri nel nodo
+1) quei parametri che voglio settare solo all'inizio della esecuzione e non cambiano duante l'esecuzione (es. riutilizzo il software su diversi robot e voglio settare certi parametri all'inzio)
+2) Vogliamo cambiarli a runtime (es. voglio fare detection di un object, poi dopo un po' voglio cambiare object)
+
+La prima opzione è più facile ed è quella che vediamo
+
+Apri src/parameter_test/src/param_first.cpp
+
+Vediamo come si settano effettivamente i valori dei parametre: si fa con i launch file
+
+Apri src/parameter_test/launch/param_set.launch
+
+(HA CAMBIATO I FILE ED HA RISPIEGATO QUESTA PARTE NEL LAB 5)
+
+per settare i parametri posso anche usare il comando:
+    rosparam set /name "asd"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

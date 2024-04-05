@@ -1,0 +1,127 @@
+ 
+la scorsa volta abbiamo finito con
+
+    rosservice call /spawn 10 10 0 test
+
+Come possiamo controllare la seconda turtle?
+
+Vediamo quali nodi ci sono con
+    rosnode list
+
+Vediamo come si comporta turtlesim
+    rosnode info /turtlesim
+
+Ora mostra tra i publisher 2 turtle e 2 pose
+tra i subscribe ci sono 2 turtle cmd vel, però la seconda turtle è iscritta a un diverso topic (dove nessuno pubblica niente)
+Allora devo far ripartire cmd_vel e farlo pubblicare su turtle2:
+
+Voglio pubblicare dei data su un nuovo topic, a sx c'è l'original topic e a dx c'è il topic su cui faccio remapping:
+In un nuovo tmux faccio:
+    rosrun turtlesim turtle_teleop_key /turtle1/cmd_vel:=/turtle2/cmd_vel
+
+a questo punto c'è l'errore di shutdown perchè ros non permette di avere 2 nodi con lo stesso nome -> possiamo stoppare il nodo originale e riprovare
+
+Abbiamo il problema che vogliamo controllare entrambe le turtle contemporaneamente
+Nel tmux della 1° turtle faccio:
+    rosrun turtlesim turtle_teleop_key __name:=turtle1_teleop
+
+Con questo specifichiamo il nome del nodo che vogliamo controllare
+A questo punto dovrei essere in grado di controllare entrambe le turtle
+
+---------------------------------------------------
+VEDIAMO COME REGISTRARE DATI (è importatne sapere come funzionano i bag files per il progetto)
+
+Vogliamo registrare un bag file: cioè vogliamo registrare un set di topic che stanno runnando sulla ros network
+
+Vediamo quali topic stanno runnando con: rostopic list
+
+Registriamo alcuni dati che sono pubblicati su turtle2/cmd_vel
+
+    rosbag record /turtle2/cmd_vel
+
+(per fermare la recording si usa ctrl+C)
+
+Per vedere il file faccio: ls
+
+per aprirlo faccio:
+
+    rosbag info copioilnomedelfile.bag
+
+Vengono mostrare le informazioni: quanto è durato, quanti messaggi ho registrato
+
+Ora posso provare a replicare quello che c'è dentro alla recording:
+
+    rosbag play copioilnomedelfile.bag
+
+per farlo in loop:
+
+        rosbag play -l copioilnomedelfile.bag
+
+--------------------------------------------------
+Vediamo come visualizzare i dati
+
+[tutti i file che voglio visualizzare dentro a docker li metto dentro al src folder]
+
+mi sposto dentro a src/bags/ per vedere i bag file
+
+poi per vedere cosa contiene il bag faccio:
+     rosbag info demo.bag
+
+Per visualizzare i dati faccio:
+    rosbag play -l demo.bag
+
+e in un altro terminale faccio: (è il tool per visualizzare i dati)
+    rviz
+
+Per aggiungere il video a rviz: premo add in basso a sx, poi scelgo "by topic", poi /rgb/image_rect_color/image
+
+Ora nel terminale 1 facciamo partire il demo2
+Poi in rviz aggiungo il topic laserscan (il primo va bene)
+Mostra un errore: per sistemarlo, copio il nome del topic in alto dentro al fixed frame
+Poi per vedere i dati vado su style e scelgo Points
+
+(ora stoppo rviz e faccio ripartire la demo.bag)
+Ora vogliamo visualizzare i dati numerici:
+    rosrun plotguggler plotguggler
+
+Per vedere i dati, a sx sotto streaming scelgo ROS topic subscriber
+Poi premo start
+POi scelgo gps_pose
+A questo punto non si vede ancora niente ma è normale:
+a sx dove c'è swiftnav clicco e apro tutti i dati, per vederli faccio drag and drop uno alla volta, ma prima devo fare click destro sul grafico e fare split vertically
+
+[Di solito nel progetto bisogna scrivere un nodo in cui si processano i dati ed è utile visualizzarli]
+
+-----------------------------------
+Ora vediamo il nostro primo nodo:
+
+src/pub_sub/src/ e poi apro pub e sub (vedi i commenti nel codice)
+
+vediamo anche cmakelist.txt e package.xml (vedi i commenti nel codice)
+
+Per compilare facciamo:
+    catkin_make
+
+Dovrebbe generare i folders build and devel
+
+Ora che abbiamo generato i nodi, vogliamo usarli:
+
+    rosrun pub_sub pub
+
+(specifico il package pub_sub e il nodo pub )
+
+Poi su un altro tmux faccio
+
+    rosrun pub_sub sub
+
+Per vedere i topic attivi faccio
+    rosnode list
+
+Per vedere i messaggi pubblicati su un topic faccio
+    rostopic echo /chatter
+
+
+
+
+
+

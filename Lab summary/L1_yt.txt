@@ -1,0 +1,36 @@
+Fonte: video yt e slide L1
+https://www.youtube.com/watch?v=qWuudNxFGOQ&t=371s
+ 
+    Serve per vedere quali immagini di docker sono state installate:
+
+docker images
+
+    Come produrre il container (entra dentro ad ubuntu)
+
+docker run -it robotics:stable
+
+    Controllare la versione di ubuntu:
+
+lsb_release -a
+
+    Pulire il terminale in ubuntu
+
+clear
+
+    Controllare quali immagini di docker stanno runnando:
+
+docker ps
+
+    Far partire ros in ubuntu:
+
+roscore
+
+    Come connettere un altro terminale a roscore:
+
+prima faccio "docker ps" per vedere quali stanno runnando
+poi faccio "docker exec -it COPIOLOSTATUS bash"
+Ora entrambi i terminali puntano allo stesso container
+
+
+    [Trovato su internet: Ctrl+C per killare un processo che sta runnando su terminale]
+
