@@ -10,22 +10,22 @@ int main(int argc, char** argv){
   ros::NodeHandle node;
 
   // Create a TransformListener object that will listen to tf data
-  tf::TransformListener listener;
+  tf::TransformListener listener;   //simile a quello che avevo per il publishing (TransformBroadcaster)
 
   // Set the rate at which we want to check the transformation
-  ros::Rate rate(10.0);
+  ros::Rate rate(10.0); //per questo esempio vogliamo prendere le informazioni a 10hz -> usiamo il while(ok) loop
 
   while (node.ok()){
-    tf::StampedTransform transform;
-
+    tf::StampedTransform transform; //creiamo questo per salvare l'informazione
+          //devo fare 2 cose per avere la transformation
     try{
       // Wait for up to 1 second for the transform to become available
-      listener.waitForTransform("/world", "/FRleg", ros::Time(0), ros::Duration(1.0)); //Usiamo ros Time 0 perchè vogliamo l'ultima trasformazione è importante settare la duration in accordo con la frequenza del publisher 
+      listener.waitForTransform("/world", "/FRleg", ros::Time(0), ros::Duration(1.0)); //[prima cosa]: chiamo waitForTransform sul listener: è una chiamata bloccante che aspetta che la transformation sia disponibile, specifico che voglio bloccare per 1 secondo prima di tirare l'exception (devo controllare che il publisher non sia più lento del listener es. publisher a 10hz); poi settiamo la trasformazione tra world e frleg (posso quindi fare una trasformazine tra elementi che appartengono al tfTree e non per forza elementi che sono vicini). Usiamo ros Time 0: per dire quando la transformation deve essere pubblicata (il timestamp)
 
       // Look up the transformation from "world" to "FRleg"
-      listener.lookupTransform("/world", "/FRleg", ros::Time(0), transform);
+      listener.lookupTransform("/world", "/FRleg", ros::Time(0), transform); //[seconda cosa]: se arriva la transformation, posso proseguire alla lookupTransform: gli passo i due elementi, il timestamp al quale voglio pubblicare la transformation, e che voglio salvarlo dentro alla transformation 
     }
-    catch (tf::TransformException &ex) {
+    catch (tf::TransformException &ex) { //questa è l'exception che viene tirata, di solito quando il waitForTransform termina dopo 1 secondo 
       // If there is an exception print the error message
       ROS_ERROR("%s",ex.what());
       ros::Duration(1.0).sleep();
@@ -34,8 +34,8 @@ int main(int argc, char** argv){
 
 
     // Print transformation (only pose, but you can get the orientation)
-    ROS_INFO("Translation: x=%f, y=%f, z=%f",
-              transform.getOrigin().x(),  //questo è il setup della transformation dentro a ros
+    ROS_INFO("Translation: x=%f, y=%f, z=%f", //qui posso stampare i diversi valori
+              transform.getOrigin().x(),  
               transform.getOrigin().y(),
               transform.getOrigin().z());
 

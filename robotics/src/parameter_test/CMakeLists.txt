@@ -4,7 +4,7 @@ project(parameter_test)
 ## Find catkin and any catkin packages
 find_package(catkin REQUIRED COMPONENTS roscpp std_msgs dynamic_reconfigure)
 
-generate_dynamic_reconfigure_options(
+generate_dynamic_reconfigure_options( #qui specifico che voglio compilare il file cfg per generare la configurazione
   cfg/parameters.cfg
   
 )

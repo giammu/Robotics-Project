@@ -1,1 +1,158 @@
- 
+Riprendiamo i parameters della scorsa volta
+Ha modificato il codice 
+Il secondo topic che vediamo sono i TF: ci servono alcuni packages -> ha aggiornato il dockerfile: devo buildare la immagine
+
+Vediamo parameter_test/src/param_first.cpp (vedi commenti)
+
+Ci sono 2 modi per setuppare i parameters:
+1) statico: li setto quando parte il nodo e restano gli stessi
+2) dinamico: chiamo le callback ogni volta che voglio cambiare i parameter_test
+
+Per capire come funziona il codice, guardiamo il launch file: parameter_test/launch/param_set.launch (vedi commenti)
+
+Runniamo con 
+    roslaunch parameter_test param_set.launch
+
+Vediamo i parametri nella network, in un nuovo tmux faccio:
+    rosparam list
+
+Vediamo i parameters:
+/name è il global
+/param_first/name è il private
+
+Vediamo i topic nella network
+    rostopic list
+
+E vediamo 2 topic
+/global_parameter è quello globale
+/param_first/local_parameter è quello privato
+
+We can subscribe to them, just to check that they are different
+    rostopic echo /global_parameter
+    e così dovrei vedere "first"
+    rostopic echo /param_first/local_parameter
+    e così dovrei vedere "second"
+
+Quindi tutto questo che abbiamo visto era come settare i parameters statici che non voglio che cambino a runtime
+---------------
+Se invece voglio cambiare i parameters a runtime, uso un ros tool che si chiama dynamic reconfigure, il quale richiede il setup di un configuration file dove dico i parameters da setuppare
+
+Apro parameter_test/cfg/parameters.cfg
+
+Poi devo editare il CMakeList.txt file: per specificare che voglio compilare questo file per generare la configuration 
+
+Ora mi serve un nodo che gestisca questa dynamic configure: apro il file src/param_second.cpp
+
+Per vedere come funziona, possiamo usare:
+    rosrun parameter_test param_second
+per attivare il nodo, il quale resta in attesa che cambi qualcosa
+
+Per cambiare dinamicamente i parametri uso questo nodo:
+    rosrun rqt_reconfigure rqt_reconfigure
+
+A questo punto si apre una finestra nella gui, clicco su param_second, e ottengo una lista di tutti i parametri che posso riconfigurare dinamicamente
+Se li cambio, sul terminale vedo come è cambiato e il numero del parametro (es 0,1,2,3...)
+
+-------------------
+Ora vediamo TF: sono usati per gestire le traformazioni e posizioni di elementi dentro a ROS 
+Per ogni robot, dai più semplici ai più complessi, ci sono dei sistemi di riferimento
+es. voglio calcolare la posizione relativa del primo joint con il secondo joint del robotic arm -> uso una transformation matrix to retreive the position
+
+Non voglio fare tutta la computazine a mano, ma gestirla internamente: questo tool si chiama TF
+Posso definire le posizioni degli elementi dentro a ros: creare un tree che connette gli elementi e poi interrogare ros per conoscere le posizioni degli elementi
+E' importante sia per i bracci robotici, ma anche per correggere l'odometry di un autonomous robot
+
+Per visualizzare come funziona, usiamo un bag file: demo3.bag
+
+Per vedere cosa c'è dentro al file: mi sposto nella cartella bags e poi:
+    rosbag info demo3.bag 
+
+Dentro al file abbiamo 2 tipi di tf:
+\tf la posizione di dove si trova rispetto a dove è partito: viene pubblicato sul tf topic. Siccome si muove viene continuamente pubblicato
+\ts_static definisce la relative position degli static elements nel sistema, non cambia nel tempo, viene pubblicato solo una volta all'inizio quando parte il nodo
+
+Facciamo partire il bag
+    rosbag play -l demo3.bag
+
+Per visualizzare i dati: per conoscere quali tf stanno runnando
+    rosrun rqt_tf_tree rqt_tf_tree
+
+Si apre un grafico nella gui:
+Vedo 2 trasformazioni: una definisce la posizione odom to the map, e una che fornisce la position dello zed_center to the odom
+
+Se faccio 
+    rostopic echo /tf
+Vedo tutti i topic che runnano
+Quello che cambia è il frame_id e child_frame_id: definiscono tra quali due elementi sto facendo la trasformazione
+Tutte le trasformazioni sono dentro al /tf topic, ma dentro al /tf ci sono diverse trasformazioni
+
+Quando il bag runna per un po' posso ritornare nella gui e cliccare il tasto refresh per aggiornare il grafico: perchè ora ha pubblicato tutti i messaggi
+
+Qui però non posso visualizzare i valori, per vederli devo aprire rviz
+    rviz
+
+Vado nella GUI: Per vedere i tf devo fare: add > by display type > TF
+
+-Publisher: i TF non sono un  topic normale, non si usa uno standard publisher per pubblicarli, ma si usa una specific structure per fare publishing and receiving dei TF
+
+Apriamo src/tf/src/pub.cpp per vedere come si pubblicano i TF
+
+Per lanciarlo facciamo:
+    roslaunch tf_example turtle.launch
+
+E poi lo guardiamo con rviz:
+    rviz
+
+Poi faccio add>tf dentro alla gui di rviz
+
+Il problema è che non vediamo ancora nulla: perchè il fixed frame di rviz è map (in alto a sx): bisogna cambiarlo con "world"
+Cambiare anche il visualization type in TopDownOrtho
+
+Ora provo a muovere la tartaruga (per vedere se funziona)
+
+-Come funzionano i subscriber in TF? (anche questi sono diversi)
+
+Apriamo il file src/tf/src/get_tf.cpp
+
+Per runnarlo facciamo
+    rosrun tf_examples get_tf 
+
+Questo ci mostra le tf information from the ros network: ros è in grado di combinare le trasformazioni tra world-turtle e turtle-frontleg per fornirci la final transformation
+
+
+-------------------
+DESCRIZIONE PROGETTO
+
+Controlla le slide e il bag perchè potrebbe aggiornarli (v1, v2, v3, ecc...)
+
+2)Il bag contiene: odometry, gps, laserscan
+3)Comandi in rosso nelle slide = how to play the data and the bag, e sotto ci sono scritti i topic es. /fix sono i gps data
+4)package: first_project
+    Questa è la parte più complessa: devo scrivere un nodo che computa la odometry dai gps data (abbiamo latitude, longitude, altitude e li convertiamo in x,y,z posizioni metriche)
+    So i want a node that subscribe to fix and publish odometry
+5)Come fare la conversion? Lui ci dice come fare ma non ci dà le formule
+    ECEF è già in metri
+    NED è relativo: significa che devo fornire io la starting position: di solito si mette la zero position del robot come la relative position
+    gps_to_odom è un nodo
+
+    Subscribe to the fix topic -> look at the value of latitude, longitude, altitude -> li setto all'inizio come la mia zero-position
+6) Il gps ti dà una posizione ma non un orientamento, devo computare l'orientation: ho multiple points (è la trajectory e il gps funziona a 10hz) -> computo l'orientamento usando i punti consecutivi (la linea che passa tra i due punti) 
+7) Secondo nodo: odom_to_tf: si iscrive a odometry e pubblica su tf (è estremamente simile a quello visto durante il lab di oggi: cambio il nome/tipo dei topic)
+    Importante: devo scrivere un nodo generico perchè abbiamo 2 diverse odometry: 1-odometry dall'encoders, 2-odometry dal gps  
+    Quindi il nodo deve runnare 2 volte: una per ogni tipo differente di topic -> prende come input input_odom e ha come parameters i due reference frame of the tf 
+    Quello che devo fare: scrivere il nodo, metterlo nel launch file, configurarlo per partire 2 volte, iscriversi al correct odometry, publish the correct tf using the parameters to set the root and child frame
+8)root e child frame: dovrebbero essere: world è root per entrambi, idue child sono wheel_odom e gps_odom (partono dalla stessa posizione ma probabilmente hanno posizioni diverse al passare del tempo)
+9)Terzo nodo: lidar data visualization: abbiamo 2 odometry e dobbiamo capire quale dei due è meglio
+    Devo iscrivermi al /scan topic, cambiare il reference frame di dov'è posizionato la scan (che è definita nell'header dello scan topic, (devo guardarci dentro)), e poi pubblicare ancora lo scan topic
+    Uso il dynamic reconfigure per cambiare il valore dell'header: decido se settare i parameters to be the ones of wheel_odom oppure gps_odom
+    Così facendo aprendo rviz dovrei vedere la laserscan centrata sul tf dell'encoder o sul tf del gps odometry
+10)Usare solo 1 launchfile che fa partire tutto: 3 nodi, tutti i parametri e rviz
+    il comando deve essere roslaunch first_project launch.launch
+11)Debugging: (posso farlo solo quando runna)
+    visualizzo i lidarr data: setting the reference inside the rviz (se tutto è setuppato giusto, gli elementi statici devono rimanere nella stessa posizione)
+    Odometry drift: ci possono essere dei minor-movement
+13) iviare tar.gz o qualsiasi altro tipo di archivio (basta zipparlo)
+14) scrivere una una linea per studente nel gruppo
+    Se voglio, posso aggiungere un README.txt, dove spiego se ho dei problemi nel file (il prof si aspetta che tutto funzioni)
+15) solo 1 studente invia il progetto col suo codice persona
+

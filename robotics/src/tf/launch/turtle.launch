@@ -1,10 +1,11 @@
 <launch>
-<node pkg="tf_examples" type = "tf_pub" name = "tf_pub"/>
-<node pkg="turtlesim" type = "turtlesim_node" name = "turtlesim_node"/>
-<node pkg="turtlesim" type = "turtle_teleop_key" name = "turtle_teleop_key"/>
-<node pkg="tf" type="static_transform_publisher" name="back_right" args="0.3 -0.3 0 0 0 0 1 turtle FRleg 100" />
-<node pkg="tf" type="static_transform_publisher" name="front_right" args="0.3 0.3 0 0 0 0 1 turtle FLleg 100" />
-<node pkg="tf" type="static_transform_publisher" name="front_left" args="-0.3 0.3 0 0 0 0 1 turtle BLleg 100" />
+<node pkg="tf_examples" type = "tf_pub" name = "tf_pub"/> <!-- facciamo partire il nodo-->
+<node pkg="turtlesim" type = "turtlesim_node" name = "turtlesim_node"/> <!-- facciamo partire il turtlesim node-->
+<node pkg="turtlesim" type = "turtle_teleop_key" name = "turtle_teleop_key"/> <!-- facciamo partire il teleop key-->
+<!-- ora vogliamo pubblicare anche la posizione delle diverse gambe della tartaruga: sono statici (mi aspetto che non cambino nel tempo), allora usiamo gli static tf-->
+<node pkg="tf" type="static_transform_publisher" name="back_right" args="0.3 -0.3 0 0 0 0 1 turtle FRleg 100" /> <!-- per usare gli static tf li metto nel launch file usando il tf package-->
+<node pkg="tf" type="static_transform_publisher" name="front_right" args="0.3 0.3 0 0 0 0 1 turtle FLleg 100" /> <!-- devo specificare dei nomi diversi ai nodi-->
+<node pkg="tf" type="static_transform_publisher" name="front_left" args="-0.3 0.3 0 0 0 0 1 turtle BLleg 100" /> <!-- e poi passiamo come argomento i diversi tf da pubblicare: ho la posizione -0.3 0.3 0, e poi il quaternion 0 0 0 1, la root che è la turtle, il child che è la leg, 100 è la frequenza con cui viene pubblicato lo static tf-->
 <node pkg="tf" type="static_transform_publisher" name="back_left" args="-0.3 -0.3 0 0 0 0 1 turtle BRleg 100" />
 
 </launch>

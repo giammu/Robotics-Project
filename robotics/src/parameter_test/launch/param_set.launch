@@ -1,8 +1,8 @@
 <launch> 
- <param name="name" value="first" /> <!-- così settiamo i parametres values: name=il nome del parametro da settare, first=la stringa -->
+ <param name="name" value="first" /> <!-- così settiamo i parametres values (globale): name=il nome del parametro da settare, first=è il valore che voglio settare, in questo caso è una stringa -->
  
- <node pkg="parameter_test" name="param_first" type="param_first" output="screen">
-  <param name="name" value="second" />
+ <node pkg="parameter_test" name="param_first" type="param_first" output="screen"> <!--Qui faccio partire il nodo-->
+  <param name="name" value="second" /> <!--Qui setto il parameter specifico del nodo (privato); quindi il parametro si chiamerà "param_first/name" perchè è un parametro specifico per questo nodo-->
  </node>
 
 </launch>
