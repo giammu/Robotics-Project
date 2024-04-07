@@ -134,7 +134,6 @@ Controlla le slide e il bag perchè potrebbe aggiornarli (v1, v2, v3, ecc...)
     ECEF è già in metri
     NED è relativo: significa che devo fornire io la starting position: di solito si mette la zero position del robot come la relative position
     gps_to_odom è un nodo
-
     Subscribe to the fix topic -> look at the value of latitude, longitude, altitude -> li setto all'inizio come la mia zero-position
 6) Il gps ti dà una posizione ma non un orientamento, devo computare l'orientation: ho multiple points (è la trajectory e il gps funziona a 10hz) -> computo l'orientamento usando i punti consecutivi (la linea che passa tra i due punti) 
 7) Secondo nodo: odom_to_tf: si iscrive a odometry e pubblica su tf (è estremamente simile a quello visto durante il lab di oggi: cambio il nome/tipo dei topic)

@@ -1,4 +1,4 @@
-Fonte: video yt e slide L1
+Fonte: video yt 
 https://www.youtube.com/watch?v=qWuudNxFGOQ&t=371s
  
     Serve per vedere quali immagini di docker sono state installate:
@@ -33,4 +33,15 @@ Ora entrambi i terminali puntano allo stesso container
 
 
     [Trovato su internet: Ctrl+C per killare un processo che sta runnando su terminale]
+
+-------------------------
+slide L1
+
+controllare se docker sta runnando:
+
+    docker run hello-world
+
+Come Buildare l'immagine di docker (entra nella cartella dockerfile)
+
+    ./build.sh
 
