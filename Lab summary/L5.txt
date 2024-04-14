@@ -126,13 +126,22 @@ DESCRIZIONE PROGETTO
 Controlla le slide e il bag perchè potrebbe aggiornarli (v1, v2, v3, ecc...)
 
 2)Il bag contiene: odometry, gps, laserscan
-3)Comandi in rosso nelle slide = how to play the data and the bag, e sotto ci sono scritti i topic es. /fix sono i gps data
+3)Comandi nelle slide = how to play the data and the bag
+
+    rosbag play --clock robotics.bag
+
+ e sotto ci sono scritti i topic
+
+    /fix sono i gps data
+    /odom è la odometry
+    /os_cloud_node/points è la pointcloud del lidar
+
 4)package: first_project
     Questa è la parte più complessa: devo scrivere un nodo che computa la odometry dai gps data (abbiamo latitude, longitude, altitude e li convertiamo in x,y,z posizioni metriche)
     So i want a node that subscribe to fix and publish odometry
-5)Come fare la conversion? Lui ci dice come fare ma non ci dà le formule
+5)Come fare la conversion? Vedi le formule alla fine delle slide
     ECEF è già in metri
-    NED è relativo: significa che devo fornire io la starting position: di solito si mette la zero position del robot come la relative position
+    ENU è relativo: significa che devo fornire io la starting position: di solito si mette la zero position del robot come la relative position
     gps_to_odom è un nodo
     Subscribe to the fix topic -> look at the value of latitude, longitude, altitude -> li setto all'inizio come la mia zero-position
 6) Il gps ti dà una posizione ma non un orientamento, devo computare l'orientation: ho multiple points (è la trajectory e il gps funziona a 10hz) -> computo l'orientamento usando i punti consecutivi (la linea che passa tra i due punti) 
@@ -141,14 +150,14 @@ Controlla le slide e il bag perchè potrebbe aggiornarli (v1, v2, v3, ecc...)
     Quindi il nodo deve runnare 2 volte: una per ogni tipo differente di topic -> prende come input input_odom e ha come parameters i due reference frame of the tf 
     Quello che devo fare: scrivere il nodo, metterlo nel launch file, configurarlo per partire 2 volte, iscriversi al correct odometry, publish the correct tf using the parameters to set the root and child frame
 8)root e child frame: dovrebbero essere: world è root per entrambi, idue child sono wheel_odom e gps_odom (partono dalla stessa posizione ma probabilmente hanno posizioni diverse al passare del tempo)
-9)Terzo nodo: lidar data visualization: abbiamo 2 odometry e dobbiamo capire quale dei due è meglio
+9)Terzo nodo chiamato lidar_remap: lidar data visualization: abbiamo 2 odometry e dobbiamo capire quale dei due è meglio
     Devo iscrivermi al /scan topic, cambiare il reference frame di dov'è posizionato la scan (che è definita nell'header dello scan topic, (devo guardarci dentro)), e poi pubblicare ancora lo scan topic
     Uso il dynamic reconfigure per cambiare il valore dell'header: decido se settare i parameters to be the ones of wheel_odom oppure gps_odom
     Così facendo aprendo rviz dovrei vedere la laserscan centrata sul tf dell'encoder o sul tf del gps odometry
 10)Usare solo 1 launchfile che fa partire tutto: 3 nodi, tutti i parametri e rviz
     il comando deve essere roslaunch first_project launch.launch
 11)Debugging: (posso farlo solo quando runna)
-    visualizzo i lidarr data: setting the reference inside the rviz (se tutto è setuppato giusto, gli elementi statici devono rimanere nella stessa posizione)
+    visualizzo i lidar data: setting the reference inside the rviz (se tutto è setuppato giusto, gli elementi statici devono rimanere nella stessa posizione)
     Odometry drift: ci possono essere dei minor-movement
 13) iviare tar.gz o qualsiasi altro tipo di archivio (basta zipparlo)
 14) scrivere una una linea per studente nel gruppo

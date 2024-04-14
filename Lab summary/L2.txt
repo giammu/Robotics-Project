@@ -93,7 +93,7 @@ Questo sta pubblicando ad una frequenza di 10 Hz
 
 Nel terzo tmux: Per controllare la frequenza alla quale stanno arrivando i messaggi
 
-rostopic hz /data
+    rostopic hz /data
 
 ------------------------
 
