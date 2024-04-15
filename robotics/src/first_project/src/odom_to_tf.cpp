@@ -13,3 +13,7 @@ Entrambi hanno lo stesso root = world, ma i child frame sono rispettivamente 1) 
 
 Quello che devo fare: scrivere il nodo, metterlo nel launch file, configurarlo per partire 2 volte, iscriversi al correct odometry, publish the correct tf using the parameters to set the root and child frame
 */ 
+
+int main(){
+    
+}

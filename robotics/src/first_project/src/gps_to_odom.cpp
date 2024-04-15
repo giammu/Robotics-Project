@@ -15,3 +15,6 @@ Il gps ti dà una posizione ma non l'orientation, devo computarla: ho multiple p
 -> computo l'orientamento usando i punti consecutivi (la linea che passa tra i due punti) che mi sono trovato prima con ENU
 */
 
+int main(){
+
+}

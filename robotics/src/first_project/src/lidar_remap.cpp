@@ -10,3 +10,7 @@ Il nodo deve permettere all'utente di selezionare da rqt_reconfigure a quale tf 
 (Così facendo da rviz dovrei vedere la laserscan centrata sul tf dell'encoder o sul tf del gps odometry)
 
 */
+
+int main(){
+    
+}
