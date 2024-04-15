@@ -11,6 +11,6 @@ Il nodo deve permettere all'utente di selezionare da rqt_reconfigure a quale tf 
 
 */
 
-int main(){
+int main(int argc, char **argv){
     
 }
