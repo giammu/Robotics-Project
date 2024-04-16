@@ -1,4 +1,3 @@
 robotics/src/bags/robotics.bag 
 build/
-build/CMakeCache.txt
 .vscode/settings.json
