@@ -34,16 +34,22 @@ void callback2(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata
     float lon = msg->longitude;
     float alt = msg->altitude;
 
+    //need to cast lat long alt to radiant for find sin 
+    const double PI = 3.14159265358979323846;
+    float latRad = (lat*PI)/180.0;
+    float lonRad = (lon*PI)/180.0;
+
+
     float a = 6378137.0;
     float b = 6356752.0;
     float e2 = 1 - (b*b)/(a*a);
-    //ROS_INFO("type [%s]", typeid(msg->latitude).name()); print type of a var
-    float n = a/sqrt(1-(e2*(sin(lat)*sin(lat))));
-    float x = (n + alt)*cos(lat)*cos(lon);
+//nonostante aver sistemato i radianti, continua ad essere sballato di 10^4, forse il problema è n
+    float n = a/sqrt(1-(e2*(sin(latRad)*sin(latRad))));
+    float x = (n + alt)*cos(latRad)*cos(lonRad);
     float y = (n + alt)*cos(lat)*sin(lon);
     float z = (n*(1-e2) + alt)*sin(lat);
 
-    ROS_INFO("n [%f]", n);
+    ROS_INFO("n [%f]", sin(latRad));
     ROS_INFO("e2 [%f]", e2);
     ROS_INFO("x [%f]", x);
     ROS_INFO("y [%f]", y);
