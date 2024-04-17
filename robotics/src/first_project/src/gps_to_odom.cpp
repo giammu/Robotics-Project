@@ -19,9 +19,9 @@ Il gps ti dà una posizione ma non l'orientation, devo computarla: ho multiple p
 #include "nav_msgs/Odometry.h" 
 
 void callback(const nav_msgs::Odometry::ConstPtr& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo messaggio
-    ROS_INFO("I heard: [%s]", msg->pose.pose.position.x); //processing dei data: sbagliato il tipo di dato
-    ROS_INFO("I heard: [%s]", msg->pose.pose.position.y); //processing dei data: sbagliato il tipo di dato
-    ROS_INFO("I heard: [%s]", msg->pose.pose.position.z); //processing dei data: sbagliato il tipo di dato
+    ROS_INFO("I heard: [%f]", msg->pose.pose.position.x); //processing dei data: sbagliato il tipo di dato
+    ROS_INFO("I heard: [%f]", msg->pose.pose.position.y); //processing dei data: sbagliato il tipo di dato
+    ROS_INFO("I heard: [%f]", msg->pose.pose.position.z); //processing dei data: sbagliato il tipo di dato
 
     //qui computo i dati e poi li pubblico???
 
@@ -35,10 +35,10 @@ int main(int argc, char **argv){
     ros::NodeHandle n; //forse devo usare più di 1 handler per fare pub e sub in contemporanea
 
     //Subscriber
-    ros::Subscriber sub = n.subscribe("fix", 1, callback); //topic: fix, buffer: dimensione 1, il subscriber chiama la funzione
-    // ros::spin(); //cicla aspettando i messaggi
+    ros::Subscriber sub = n.subscribe("odom", 1, callback); //topic: fix, buffer: dimensione 1, il subscriber chiama la funzione
+    ros::spin(); //cicla aspettando i messaggi
 
-
+    /*
     //Publisher
    	ros::Publisher pub = n.advertise<nav_msgs::Odometry>("gps_odom", 1); // type: nav_msgs/Odometry, topic: gps_odom, buffer: dimensione 1 (good practice)
     nav_msgs::Odometry odom; //creo il messaggio
@@ -53,5 +53,5 @@ int main(int argc, char **argv){
     	loop_rate.sleep(); 
   	}
     //oppure loop AUTOMATICO:  ros::spin();
-
+    */
 }

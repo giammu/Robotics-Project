@@ -1,5 +1,5 @@
 
-Riprendiamo da dove abbiamo finito la scorsa volta
+Riprendiamo da dove abbiamo finito la scorsa volta (package pub_sub)
 
 Questa lezione e la prossima vediamo i componenti basici di ros
 (
@@ -8,7 +8,7 @@ per runnare qualcosa si fa:
     rosrun nomepackage nomenodo
 )
 
-Inoltre aggiungiamo che nelle cartelle launch: ci sono file utili ma non mandatori, che servono per l'avvio (vedi commento)
+Inoltre aggiungiamo che nelle cartelle launch: ci sono file utili ma non mandatori, che servono per l'avvio (vedi commento pub_sub/launch/multi_turtle.launch)
 
 -Per i launchfile non devo far partire roscore, perchè ci pensa lui
 -Se ho multipli launchfile, è meglio avere roscore che runna in un diverso terminale perchè altrimenti ogni launchfile avvia roscore
@@ -24,7 +24,7 @@ Per vedere i publisher e subscribers uso:
 
 -------------------------------------
 Ora vediamo i CUSTOM MESSAGES:
-ros ha un set di messaggi che si possono usare per oubblicare le informazioni
+ros ha un set di messaggi che si possono usare per pubblicare le informazioni
 Ci possono essere scenari in cui gli standard ros messages non sono abbastanza
 
 vado nel package custom_messages, e apro msg, num.msg: contiene solo un intero a 64 bits
