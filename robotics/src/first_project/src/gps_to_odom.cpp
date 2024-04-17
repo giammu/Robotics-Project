@@ -18,6 +18,8 @@ Il gps ti dà una posizione ma non l'orientation, devo computarla: ho multiple p
 #include "ros/ros.h" 
 #include "nav_msgs/Odometry.h" 
 #include "sensor_msgs/NavSatFix.h"
+#include "math.h"
+#include "typeinfo"
 
 void callback(const nav_msgs::Odometry::ConstPtr& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo messaggio
     ROS_INFO("x:[%f], y:[%f], z:[%f]", msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z); //processing dei data: sbagliato il tipo di dato
@@ -28,6 +30,27 @@ void callback(const nav_msgs::Odometry::ConstPtr& msg){ //funzione chiamata auto
 
 void callback2(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo messaggio
     ROS_INFO("lat:[%f], long:[%f], alt:[%f]", msg->latitude, msg->longitude, msg->altitude); //processing dei data: sbagliato il tipo di dato
+    float lat = msg->latitude;
+    float lon = msg->longitude;
+    float alt = msg->altitude;
+
+    float a = 6378137.0;
+    float b = 6356752.0;
+    float e2 = 1 - (b*b)/(a*a);
+    //ROS_INFO("type [%s]", typeid(msg->latitude).name()); print type of a var
+    float n = a/sqrt(1-(e2*(sin(lat)*sin(lat))));
+    float x = (n + alt)*cos(lat)*cos(lon);
+    float y = (n + alt)*cos(lat)*sin(lon);
+    float z = (n*(1-e2) + alt)*sin(lat);
+
+    ROS_INFO("n [%f]", n);
+    ROS_INFO("e2 [%f]", e2);
+    ROS_INFO("x [%f]", x);
+    ROS_INFO("y [%f]", y);
+    ROS_INFO("z [%f]", z);
+
+
+
 }
 
 
