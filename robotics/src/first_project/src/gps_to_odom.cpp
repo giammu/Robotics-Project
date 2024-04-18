@@ -21,40 +21,44 @@ Il gps ti dà una posizione ma non l'orientation, devo computarla: ho multiple p
 #include "math.h"
 #include "typeinfo"
 
-void callback(const nav_msgs::Odometry::ConstPtr& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo messaggio
-    ROS_INFO("x:[%f], y:[%f], z:[%f]", msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z); //processing dei data: sbagliato il tipo di dato
 
-    //qui computo i dati e poi li pubblico???
 
-}
 
 void callback2(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo messaggio
-    ROS_INFO("lat:[%f], long:[%f], alt:[%f]", msg->latitude, msg->longitude, msg->altitude); //processing dei data: sbagliato il tipo di dato
+    
+   //ROS_INFO("header %d", msg->header.seq);
+
+
+//dovrei entrare qui per prendere il riferimento della prima misurazione
+//come detto nella slide 5
+    if(msg->header.seq == 1) {
+            float lat_r = msg->latitude;
+            float lon_r = msg->longitude;
+            float alt_r = msg->altitude;
+            ROS_INFO("pippo");
+    }
+
     float lat = msg->latitude;
     float lon = msg->longitude;
     float alt = msg->altitude;
+    float a = 6378137.0;
+    float b = 6356752.0;
 
-    //need to cast lat long alt to radiant for find sin 
+
+    //need to cast lat long to radiant for find sin 
     const double PI = 3.14159265358979323846;
     float latRad = (lat*PI)/180.0;
     float lonRad = (lon*PI)/180.0;
 
-
-    float a = 6378137.0;
-    float b = 6356752.0;
+//cast to ECEF
     float e2 = 1 - (b*b)/(a*a);
-//nonostante aver sistemato i radianti, continua ad essere sballato di 10^4, forse il problema è n
-    float n = a/sqrt(1-(e2*(sin(latRad)*sin(latRad))));
+    float n = a/sqrt(1.0-e2*sin(latRad)*sin(latRad));
     float x = (n + alt)*cos(latRad)*cos(lonRad);
-    float y = (n + alt)*cos(lat)*sin(lon);
-    float z = (n*(1-e2) + alt)*sin(lat);
+    float y = (n + alt)*cos(latRad)*sin(lonRad);
+    float z = (n*(1.0-e2) + alt)*sin(latRad);
 
-    ROS_INFO("n [%f]", sin(latRad));
-    ROS_INFO("e2 [%f]", e2);
-    ROS_INFO("x [%f]", x);
-    ROS_INFO("y [%f]", y);
-    ROS_INFO("z [%f]", z);
 
+//cast to ENU
 
 
 }
@@ -65,6 +69,7 @@ int main(int argc, char **argv){
 
     ros::init(argc, argv, "gps_to_odom");
     ros::NodeHandle n; //forse devo usare più di 1 handler per fare pub e sub in contemporanea
+
 
     //Subscriber
     ros::Subscriber sub = n.subscribe("fix", 1, callback2); //topic: fix, buffer: dimensione 1, il subscriber chiama la funzione
