@@ -21,28 +21,43 @@ Il gps ti dà una posizione ma non l'orientation, devo computarla: ho multiple p
 #include "math.h"
 #include "typeinfo"
 
+float* castToECEF(int lat, int lon, int alt) {
+    float a = 6378137.0;
+    float b = 6356752.0;
+    float e2 = 1 - (b*b)/(a*a);
+    float n = a/sqrt(1.0-e2*sin(lat)*sin(lat));
+    float coord[3];
+
+
+    coord[1] = (n + alt)*cos(lat)*cos(lon);
+    coord[2] = (n + alt)*cos(lat)*sin(lon);
+    coord[3] = (n*(1.0-e2) + alt)*sin(lat);
+    return coord;
+}
 
 
 
 void callback2(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo messaggio
     
-   //ROS_INFO("header %d", msg->header.seq);
+    ROS_INFO("header %d", msg->header.seq);
+
+//problema: entra nel ciclo solo se l'header è diverso da 1
+//test fatto eseguendo prima gps_to_odom e poi facendo partire robotics.bag
 
 
-//dovrei entrare qui per prendere il riferimento della prima misurazione
-//come detto nella slide 5
-    if(msg->header.seq == 1) {
+    if(msg->header.seq == 2) {
             float lat_r = msg->latitude;
             float lon_r = msg->longitude;
             float alt_r = msg->altitude;
             ROS_INFO("pippo");
     }
 
+
+
     float lat = msg->latitude;
     float lon = msg->longitude;
     float alt = msg->altitude;
-    float a = 6378137.0;
-    float b = 6356752.0;
+
 
 
     //need to cast lat long to radiant for find sin 
@@ -51,11 +66,9 @@ void callback2(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata
     float lonRad = (lon*PI)/180.0;
 
 //cast to ECEF
-    float e2 = 1 - (b*b)/(a*a);
-    float n = a/sqrt(1.0-e2*sin(latRad)*sin(latRad));
-    float x = (n + alt)*cos(latRad)*cos(lonRad);
-    float y = (n + alt)*cos(latRad)*sin(lonRad);
-    float z = (n*(1.0-e2) + alt)*sin(latRad);
+
+
+    float* coord = castToECEF(latRad, lonRad, alt);
 
 
 //cast to ENU
@@ -69,7 +82,6 @@ int main(int argc, char **argv){
 
     ros::init(argc, argv, "gps_to_odom");
     ros::NodeHandle n; //forse devo usare più di 1 handler per fare pub e sub in contemporanea
-
 
     //Subscriber
     ros::Subscriber sub = n.subscribe("fix", 1, callback2); //topic: fix, buffer: dimensione 1, il subscriber chiama la funzione
