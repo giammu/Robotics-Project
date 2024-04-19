@@ -2,11 +2,16 @@
 <!-- l'unico comando per far partire il progetto dovrebbe essere: roslaunch first_project launch.launch -->
 
 <launch>
+     <param name="lat_r" value="45.477669"  /> 
+     <param name="lon_r" value="9.226740"  /> 
+     <param name="alt_r" value="169.039000"  />
 
-    <group ns="group1"> <!-- creiamo questo namespace: mi permette di far partire molti nodi con lo stesso nome in diversi namespace-->
+    
+
+     <group ns="group1"> <!-- creiamo questo namespace: mi permette di far partire molti nodi con lo stesso nome in diversi namespace-->
      <node pkg="first_project" type = "gps_to_odom" name = "gps_to_odom"/> <!-- facciamo partire il nodo, forse il nome del package non è giusto-->
+     <!-- <remap from="original" to="new">  serve per fare renaming di un topic (questa non è la sintassi corretta, bisogna scriverlo dentro a node)-->
 
-     <remap from="original" to="new"> <!-- serve per fare renaming di un topic (questa non è la sintassi corretta, bisogna scriverlo dentro a node)-->
-    </group>
+    </group> 
 
 </launch>

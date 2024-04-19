@@ -20,6 +20,11 @@ Il gps ti dà una posizione ma non l'orientation, devo computarla: ho multiple p
 #include "sensor_msgs/NavSatFix.h"
 #include "math.h"
 #include "typeinfo"
+#include <sstream>
+
+std::float_t lat_r;
+std::float_t lon_r;
+std::float_t alt_r; 
 
 float* castToECEF(int lat, int lon, int alt) {
     float a = 6378137.0;
@@ -37,15 +42,22 @@ float* castToECEF(int lat, int lon, int alt) {
 
 
 
-void callback2(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo messaggio
+void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo messaggio
     
-    ROS_INFO("header %d", msg->header.seq);
+    //ROS_INFO("\n header %d", msg->header.seq);
+    //ROS_INFO("\n lat %f, lon %f, alt %f", msg->latitude, msg->longitude, msg->altitude);
 
-//problema: entra nel ciclo solo se l'header è diverso da 1
-//test fatto eseguendo prima gps_to_odom e poi facendo partire robotics.bag
+    ROS_INFO("\n lat %f, lon %f, alt %f", lat_r, lon_r, alt_r);
 
 
-    if(msg->header.seq == 2) {
+    
+
+/*
+    
+    //problema: entra nel ciclo solo se l'header è diverso da 1
+    //test fatto eseguendo prima gps_to_odom e poi facendo partire robotics.bag
+
+    if(msg->header.seq == 1) {
             float lat_r = msg->latitude;
             float lon_r = msg->longitude;
             float alt_r = msg->altitude;
@@ -53,7 +65,7 @@ void callback2(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata
     }
 
 
-
+    
     float lat = msg->latitude;
     float lon = msg->longitude;
     float alt = msg->altitude;
@@ -65,15 +77,15 @@ void callback2(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata
     float latRad = (lat*PI)/180.0;
     float lonRad = (lon*PI)/180.0;
 
-//cast to ECEF
+    //cast to ECEF
 
 
     float* coord = castToECEF(latRad, lonRad, alt);
 
 
-//cast to ENU
+    //cast to ENU
 
-
+    */
 }
 
 
@@ -83,9 +95,17 @@ int main(int argc, char **argv){
     ros::init(argc, argv, "gps_to_odom");
     ros::NodeHandle n; //forse devo usare più di 1 handler per fare pub e sub in contemporanea
 
+              //PRENDO I PARAMETRI HARDCODATI NEL LAUNCHFILE
+	n.getParam("lat_r", lat_r);
+	n.getParam("lon_r", lon_r);
+	n.getParam("alt_r", alt_r);
+
+    
+
     //Subscriber
-    ros::Subscriber sub = n.subscribe("fix", 1, callback2); //topic: fix, buffer: dimensione 1, il subscriber chiama la funzione
+    ros::Subscriber sub = n.subscribe("fix", 1, callback); //topic: fix, buffer: dimensione 1, il subscriber chiama la funzione
     ros::spin(); //cicla aspettando i messaggi
+    
 
     /*
     //Publisher

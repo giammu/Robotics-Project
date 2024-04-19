@@ -24,7 +24,7 @@ int main(int argc, char **argv){
 	std::string local_name_from_global;
 	std::string param_name = ros::this_node::getName() + "/name"; //posso anche settare manualmente il parametro privato: combino il nome del nodo con il nome del parametro. Questo non è un buon approccio ma funziona
 	ROS_INFO("local param name: %s", param_name.c_str());
-	n.getParam(param_name, local_name_from_global);  //get local param using global nodehandle
+	n.getParam(param_name, local_name_from_global);  //get local param using global nodehandle //chiede il parametro locale param_name e lo salva in local_name_from_global
 
 	ros::Rate loop_rate(10);
 

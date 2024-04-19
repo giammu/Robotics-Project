@@ -1,7 +1,7 @@
 
 
 #include "ros/ros.h"
-//#include "service/AddTwoInts.h"
+#include "service/AddTwoInts.h"
     //definiamo la callback
 bool add(service::AddTwoInts::Request  &req, //qui attende a e b in input
          service::AddTwoInts::Response &res) //qui crea in output la somma

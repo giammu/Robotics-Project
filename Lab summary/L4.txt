@@ -92,7 +92,7 @@ ORA VEDIAMO I PARAMETERS
 I parameters si usano quando non voglio ricompilare ogni volta il nodo se cambio qualche numero -> non voglio tenere tutto dentro ai nodi
 
 Ci sono 2 modi per settare i parametri nel nodo
-1) quei parametri che voglio settare solo all'inizio della esecuzione e non cambiano duante l'esecuzione (es. riutilizzo il software su diversi robot e voglio settare certi parametri all'inzio)
+1) quei parametri che voglio settare solo all'inizio della esecuzione e non cambiano duante l'esecuzione (es. riutilizzo il software su diversi robot e voglio settare certi parametri all'inizio)
 2) Vogliamo cambiarli a runtime (es. voglio fare detection di un object, poi dopo un po' voglio cambiare object)
 
 La prima opzione è più facile ed è quella che vediamo
