@@ -26,21 +26,47 @@ std::float_t lat_r;
 std::float_t lon_r;
 std::float_t alt_r; 
 
-void castToECEF(int* lat, int* lon, int* alt){
+void castToECEF(float* lat, float* lon, float* alt){
 
-    float lat = (lat*M_PI)/180.0;
-    float lon = (lon*M_PI)/180.0;
+    // Conversione da gradi a radianti
+    float lat_rad = (*lat * M_PI) / 180.0;
+    float lon_rad = (*lon * M_PI) / 180.0;
     
-    float a = 6378137.0;
-    float b = 6356752.0;
-    float e2 = 1 - (b*b)/(a*a);
-    float n = a/sqrt(1.0-e2*sin(lat)*sin(lat));
+    float a = 6378137.0; 
+    float b = 6356752.0; 
+    float e2 = 1 - (b*b)/(a*a); 
+    float n = a / sqrt(1.0 - e2 * sin(lat_rad) * sin(lat_rad)); 
 
-    lat = (n + alt)*cos(lat)*cos(lon);
-    lon = (n + alt)*cos(lat)*sin(lon);
-    alt = (n*(1.0-e2) + alt)*sin(lat);
+    // Calcolo delle coordinate ECEF
+    float x = (n + *alt) * cos(lat_rad) * cos(lon_rad);
+    float y = (n + *alt) * cos(lat_rad) * sin(lon_rad);
+    float z = (n * (1.0 - e2) + *alt) * sin(lat_rad);
+
+    // Assegnazione delle coordinate ECEF alle variabili di output
+    *lat = x;
+    *lon = y;
+    *alt = z;
 }
 
+void castToENU(float* lat, float* lon, float* alt, float lat_original, float lon_original){
+
+    float slat = sin(lat_original);
+    float clat = cos(lat_original);
+    float slon = sin(lon_original);
+    float clon = cos(lon_original);
+
+    float xp = *lat - lat_r;
+    float yp = *lon - lon_r;
+    float zp = *alt - alt_r;
+
+    float x = -slon*xp + clon*yp;
+    float y = -slat*clon*xp - slat*slon*yp + clat*zp;
+    float z = clat*clon*xp + clat*slon*yp + slat*zp;
+
+    *lat=x;
+    *lon=y;
+    *alt=z;
+}
 
 
 void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo messaggio
@@ -48,25 +74,22 @@ void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata 
     //ROS_INFO("\n header %d", msg->header.seq);
     //ROS_INFO("\n lat %f, lon %f, alt %f", msg->latitude, msg->longitude, msg->altitude);
 
-    ROS_INFO("\n lat %f, lon %f, alt %f", lat_r, lon_r, alt_r);
+    
     
     float lat = msg->latitude;
     float lon = msg->longitude;
     float alt = msg->altitude;
 
-    //need to cast lat long to radiant for find sin 
-    
+    float lat_original = msg->latitude;
+    float lon_original = msg->longitude;
 
     //cast to ECEF
-    castToECEF(&latRad, &lonRad, &alt);
-
-
-
-    
-
+    castToECEF(&lat, &lon, &alt);
 
     //cast to ENU
+    castToENU(&lat, &lon, &alt, lat_original, lon_original);
 
+    ROS_INFO("\n x %f, y %f, z %f", lat, lon, alt);
     
 }
 
@@ -81,7 +104,7 @@ int main(int argc, char **argv){
 	n.getParam("lon_r", lon_r);
 	n.getParam("alt_r", alt_r);
     castToECEF(&lat_r, &lon_r, &alt_r);
-    
+
 
 
     //Subscriber
