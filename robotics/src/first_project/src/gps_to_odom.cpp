@@ -75,7 +75,6 @@ void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata 
     //ROS_INFO("\n lat %f, lon %f, alt %f", msg->latitude, msg->longitude, msg->altitude);
 
     
-    
     float lat = msg->latitude;
     float lon = msg->longitude;
     float alt = msg->altitude;
@@ -83,13 +82,17 @@ void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata 
     float lat_original = msg->latitude;
     float lon_original = msg->longitude;
 
+    ROS_INFO("\n\n  GPS: x %f, y %f, z %f", lat, lon, alt);
+
     //cast to ECEF
     castToECEF(&lat, &lon, &alt);
+
+    ROS_INFO("\n    ECEF: x %f, y %f, z %f", lat, lon, alt);
 
     //cast to ENU
     castToENU(&lat, &lon, &alt, lat_original, lon_original);
 
-    ROS_INFO("\n x %f, y %f, z %f", lat, lon, alt);
+    ROS_INFO("\n    ENU: x %f, y %f, z %f", lat, lon, alt);
     
 }
 
