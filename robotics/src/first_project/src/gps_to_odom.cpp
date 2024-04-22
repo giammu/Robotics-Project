@@ -32,12 +32,12 @@ float ToRad(float grad) {
 }
 
 float castLatToECEF(float n, float alt, float lat_rad, float lon_rad) {
-    float x =(n + alt) * cos(lat_rad) * cos(lon_rad);
+    float x = (n + alt) * cos(lat_rad) * cos(lon_rad);
     return x;
 }
 
 float castLonToECEF(float n, float alt, float lat_rad, float lon_rad) {
-    float y =(n + alt) * cos(lat_rad) * sin(lon_rad);
+    float y = (n + alt) * cos(lat_rad) * sin(lon_rad);
     return y;
 }
 
@@ -68,8 +68,8 @@ float* castToENU(float lat, float lon, float xp, float yp, float zp){
 
 void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo messaggio
     
-    //ROS_INFO("\n header %d", msg->header.seq);
-    //ROS_INFO("\n lat %f, lon %f, alt %f", msg->latitude, msg->longitude, msg->altitude);
+    ROS_INFO("header %d\n", msg->header.seq);
+    ROS_INFO("lat %f, lon %f, alt %f\n", msg->latitude, msg->longitude, msg->altitude);
 
     
     float lat = msg->latitude;
@@ -85,7 +85,7 @@ void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata 
     float y_ecef_rif = castLonToECEF(n, alt,ToRad(lat_r), ToRad(lon_r));
     float z_ecef_rif = castAltToECEF(n, alt,ToRad(lat_r), e2);
 
-    ROS_INFO("\n\n  GPS: x %f, y %f, z %f", lat, lon, alt);
+    ROS_INFO("ECEF_RIF: x %f, y %f, z %f\n", x_ecef_rif, y_ecef_rif, z_ecef_rif);
 
     //cast to ECEF
 
@@ -97,7 +97,7 @@ void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata 
 
     //castToECEF(&lat, &lon, &alt);
 
-    ROS_INFO("\n    ECEF: x %f, y %f, z %f", x_ecef, y_ecef, z_ecef);
+    ROS_INFO("ECEF: x %f, y %f, z %f\n", x_ecef, y_ecef, z_ecef);
 
     //cast to ENU
 
@@ -105,7 +105,7 @@ void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata 
     float yp = y_ecef - y_ecef_rif;
     float zp = z_ecef - z_ecef_rif;
 
-    //float* coordsENU = castToENU(lat, lon, xp, yp, zp);
+    ROS_INFO("partial: xp %f, yp %f, zp %f\n", xp, yp, zp);
 
     float slat = sin(ToRad(lat));
     float clat = cos(ToRad(lat));
@@ -117,7 +117,7 @@ void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata 
     coords[1] = -slat*clon*xp - slat*slon*yp + clat*zp;
     coords[2] = clat*clon*xp + clat*slon*yp + slat*zp;
 
-    ROS_INFO("\n    ENU: x %f, y %f, z %f", coords[0], coords[1], coords[2]);
+    ROS_INFO("ENU: x %f, y %f, z %f\n", coords[0], coords[1], coords[2]);
     
 }
 
