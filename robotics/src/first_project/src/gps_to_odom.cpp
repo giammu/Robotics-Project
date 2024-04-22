@@ -24,49 +24,46 @@ Il gps ti dà una posizione ma non l'orientation, devo computarla: ho multiple p
 
 std::float_t lat_r;
 std::float_t lon_r;
-std::float_t alt_r; 
+std::float_t alt_r;  
 
-void castToECEF(float* lat, float* lon, float* alt){
 
-    // Conversione da gradi a radianti
-    float lat_rad = (*lat * M_PI) / 180.0;
-    float lon_rad = (*lon * M_PI) / 180.0;
-    
-    float a = 6378137.0; 
-    float b = 6356752.0; 
-    float e2 = 1 - (b*b)/(a*a); 
-    float n = a / sqrt(1.0 - e2 * sin(lat_rad) * sin(lat_rad)); 
-
-    // Calcolo delle coordinate ECEF
-    float x = (n + *alt) * cos(lat_rad) * cos(lon_rad);
-    float y = (n + *alt) * cos(lat_rad) * sin(lon_rad);
-    float z = (n * (1.0 - e2) + *alt) * sin(lat_rad);
-
-    // Assegnazione delle coordinate ECEF alle variabili di output
-    *lat = x;
-    *lon = y;
-    *alt = z;
+float ToRad(float grad) {
+    return (grad*M_PI)/180.0;
 }
 
-void castToENU(float* lat, float* lon, float* alt, float lat_original, float lon_original){
-
-    float slat = sin(lat_original);
-    float clat = cos(lat_original);
-    float slon = sin(lon_original);
-    float clon = cos(lon_original);
-
-    float xp = *lat - lat_r;
-    float yp = *lon - lon_r;
-    float zp = *alt - alt_r;
-
-    float x = -slon*xp + clon*yp;
-    float y = -slat*clon*xp - slat*slon*yp + clat*zp;
-    float z = clat*clon*xp + clat*slon*yp + slat*zp;
-
-    *lat=x;
-    *lon=y;
-    *alt=z;
+float castLatToECEF(float n, float alt, float lat_rad, float lon_rad) {
+    float x =(n + alt) * cos(lat_rad) * cos(lon_rad);
+    return x;
 }
+
+float castLonToECEF(float n, float alt, float lat_rad, float lon_rad) {
+    float y =(n + alt) * cos(lat_rad) * sin(lon_rad);
+    return y;
+}
+
+float castAltToECEF(float n, float alt, float lat_rad, float e2) {
+    float z = (n * (1.0 - e2) + alt) * sin(lat_rad);
+    return z;
+}
+
+/*
+float* castToENU(float lat, float lon, float xp, float yp, float zp){
+
+    float slat = sin(ToRad(lat));
+    float clat = cos(ToRad(lat));
+    float slon = sin(ToRad(lon));
+    float clon = cos(ToRad(lon));
+    float coords[3];
+
+    coords[0] = -slon*xp + clon*yp;
+    coords[1] = -slat*clon*xp - slat*slon*yp + clat*zp;
+    coords[2] = clat*clon*xp + clat*slon*yp + slat*zp;
+
+    return coords;
+
+}
+*/
+
 
 
 void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo messaggio
@@ -79,20 +76,48 @@ void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata 
     float lon = msg->longitude;
     float alt = msg->altitude;
 
-    float lat_original = msg->latitude;
-    float lon_original = msg->longitude;
+    float a = 6378137.0; 
+    float b = 6356752.0; 
+    float e2 = 1 - (b*b)/(a*a);
+    float n = a / sqrt(1.0 - e2 * sin(ToRad(lat_r)) * sin(ToRad(lat_r)));
+ 
+    float x_ecef_rif = castLatToECEF(n, alt,ToRad(lat_r), ToRad(lon_r));
+    float y_ecef_rif = castLonToECEF(n, alt,ToRad(lat_r), ToRad(lon_r));
+    float z_ecef_rif = castAltToECEF(n, alt,ToRad(lat_r), e2);
 
     ROS_INFO("\n\n  GPS: x %f, y %f, z %f", lat, lon, alt);
 
     //cast to ECEF
-    castToECEF(&lat, &lon, &alt);
 
-    ROS_INFO("\n    ECEF: x %f, y %f, z %f", lat, lon, alt);
+    float x_ecef = castLatToECEF(n, alt, ToRad(lat), ToRad(lon));
+    float y_ecef = castLonToECEF(n, alt, ToRad(lat), ToRad(lon));
+    float z_ecef = castAltToECEF(n, alt, ToRad(lat), e2);
+
+
+
+    //castToECEF(&lat, &lon, &alt);
+
+    ROS_INFO("\n    ECEF: x %f, y %f, z %f", x_ecef, y_ecef, z_ecef);
 
     //cast to ENU
-    castToENU(&lat, &lon, &alt, lat_original, lon_original);
 
-    ROS_INFO("\n    ENU: x %f, y %f, z %f", lat, lon, alt);
+    float xp = x_ecef - x_ecef_rif;
+    float yp = y_ecef - y_ecef_rif;
+    float zp = z_ecef - z_ecef_rif;
+
+    //float* coordsENU = castToENU(lat, lon, xp, yp, zp);
+
+    float slat = sin(ToRad(lat));
+    float clat = cos(ToRad(lat));
+    float slon = sin(ToRad(lon));
+    float clon = cos(ToRad(lon));
+    float coords[3];
+
+    coords[0] = -slon*xp + clon*yp;
+    coords[1] = -slat*clon*xp - slat*slon*yp + clat*zp;
+    coords[2] = clat*clon*xp + clat*slon*yp + slat*zp;
+
+    ROS_INFO("\n    ENU: x %f, y %f, z %f", coords[0], coords[1], coords[2]);
     
 }
 
@@ -106,8 +131,6 @@ int main(int argc, char **argv){
 	n.getParam("lat_r", lat_r); //prendo i parametri dal launchfile
 	n.getParam("lon_r", lon_r);
 	n.getParam("alt_r", alt_r);
-    castToECEF(&lat_r, &lon_r, &alt_r);
-
 
 
     //Subscriber
