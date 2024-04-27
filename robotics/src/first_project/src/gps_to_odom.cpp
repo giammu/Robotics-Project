@@ -31,9 +31,7 @@ class pub_sub
 
         const double conversion = M_PI/180;
 
-        nav_msgs::Odometry messaggio; 
-
-        float ori, ori2; //DA TOGLIERE, solo per prova
+        nav_msgs::Odometry message; 
 
         float x_prev=0, y_prev=0, z_prev=0;
 
@@ -43,8 +41,6 @@ class pub_sub
         ros::Subscriber sub;
         ros::Publisher pub;
 
-        ros::Subscriber sub2; //DA TOGLIERE, solo per prova
-
     public: pub_sub(){
 
         n.getParam("lat_r", lat_r); //prendo i parametri dal launchfile
@@ -53,9 +49,6 @@ class pub_sub
         
         ROS_INFO("\n    lat_r: %f, lon_r: %f, alt_r: %f", lat_r, lon_r, alt_r );
 
-        sub2 = n.subscribe("odom", 1, &pub_sub::callback2, this); //DA TOGLIERE
-
-
         //Subscriber
         sub = n.subscribe("fix", 1, &pub_sub::callback, this); //topic: fix, buffer: dimensione 1, il subscriber chiama la funzione
         //Publisher
@@ -63,13 +56,7 @@ class pub_sub
 
     }
 
-    void callback2(const nav_msgs::Odometry::ConstPtr& msg){ //DA TOGLIERE
-        float y_real = msg->pose.pose.position.y;
-        float x_real = msg->pose.pose.position.x;
-        ori = atan2( y_real, x_real);
-    }
-
-    void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo messaggio
+    void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo message
 
         //ROS_INFO("\n header %d", msg->header.seq);
         //ROS_INFO("\n lat %f, lon %f, alt %f", msg->latitude, msg->longitude, msg->altitude);
@@ -95,11 +82,6 @@ class pub_sub
 
         ROS_INFO("\n    ENU: x %f, y %f, z %f", lat, lon, alt);
 
-        //Computo orientamento
-        float ori2 = atan2( lon, lat); //x_real are the values taken directly from /odom through a subscriber and x, y are the computed, not rotated ENU values.
-        float diff = ori-ori2;
-        ROS_INFO("\n    ANGOLO: %f", diff/conversion);
-
         //Ruoto le coordinate
         float x = lat*cos(-130*conversion)+lon*sin(-130*conversion);
         float y = -lat*sin(-130*conversion)+lon*cos(-130*conversion);
@@ -115,18 +97,18 @@ class pub_sub
         ROS_INFO("\n    QUATERNIONE: z %f, w %f", zq, w);
 
         //Publisher
-        messaggio.pose.pose.position.x = x;
-        messaggio.pose.pose.position.y = y;
-        messaggio.pose.pose.position.z = z;
+        message.pose.pose.position.x = x;
+        message.pose.pose.position.y = y;
+        message.pose.pose.position.z = z;
 
-        messaggio.pose.pose.orientation.x = 0; //0 perchè il piano è 2D
-        messaggio.pose.pose.orientation.y = 0;
-        messaggio.pose.pose.orientation.z = zq;
-        messaggio.pose.pose.orientation.w = w;
+        message.pose.pose.orientation.x = 0; //0 perchè il piano è 2D
+        message.pose.pose.orientation.y = 0;
+        message.pose.pose.orientation.z = zq;
+        message.pose.pose.orientation.w = w;
 
-        pub.publish(messaggio);
+        pub.publish(message); //pubblico il message su gps_odom
 
-        x_prev=x;
+        x_prev=x; //le coordinate correnti diventano le coordinate precedenti
         y_prev=y;
         z_prev=alt;
     }
