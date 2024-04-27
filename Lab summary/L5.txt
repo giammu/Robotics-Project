@@ -58,6 +58,8 @@ Ora vediamo TF: sono usati per gestire le traformazioni e posizioni di elementi 
 Per ogni robot, dai più semplici ai più complessi, ci sono dei sistemi di riferimento
 es. voglio calcolare la posizione relativa del primo joint con il secondo joint del robotic arm -> uso una transformation matrix to retreive the position
 
+TF: serve per avere la relative position e il reference system corretti
+
 Non voglio fare tutta la computazine a mano, ma gestirla internamente: questo tool si chiama TF
 Posso definire le posizioni degli elementi dentro a ros: creare un tree che connette gli elementi e poi interrogare ros per conoscere le posizioni degli elementi
 E' importante sia per i bracci robotici, ma anche per correggere l'odometry di un autonomous robot
@@ -70,6 +72,7 @@ Per vedere cosa c'è dentro al file: mi sposto nella cartella bags e poi:
 Dentro al file abbiamo 2 tipi di tf:
 \tf la posizione di dove si trova rispetto a dove è partito: viene pubblicato sul tf topic. Siccome si muove viene continuamente pubblicato
 \ts_static definisce la relative position degli static elements nel sistema, non cambia nel tempo, viene pubblicato solo una volta all'inizio quando parte il nodo
+        Static: sono tutti quegli elementi che definiscono il robot e non cambiano nel tempo
 
 Facciamo partire il bag
     rosbag play -l demo3.bag
@@ -82,7 +85,7 @@ Vedo 2 trasformazioni: una definisce la posizione odom to the map, e una che for
 
 Se faccio 
     rostopic echo /tf
-Vedo tutti i topic che runnano
+Vedo tutti i messaggi scanbiati su /tf
 Quello che cambia è il frame_id e child_frame_id: definiscono tra quali due elementi sto facendo la trasformazione
 Tutte le trasformazioni sono dentro al /tf topic, ma dentro al /tf ci sono diverse trasformazioni
 

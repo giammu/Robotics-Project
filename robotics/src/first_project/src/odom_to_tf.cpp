@@ -14,6 +14,49 @@ Entrambi hanno lo stesso root = world, ma i child frame sono rispettivamente 1) 
 Quello che devo fare: scrivere il nodo, metterlo nel launch file, configurarlo per partire 2 volte, iscriversi al correct odometry, publish the correct tf using the parameters to set the root and child frame
 */ 
 
+
+#include "ros/ros.h"
+#include "nav_msgs/Odometry.h"
+#include <tf/transform_broadcaster.h>
+
+class tf_sub_pub{
+
+    std::string root_frame;
+    std::string child_frame;
+
+    private:
+        ros::NodeHandle n;  
+        tf::TransformBroadcaster br; 
+        ros::Subscriber sub; 
+            
+    public: tf_sub_pub(){
+
+        n.getParam("root_frame",root_frame);
+        n.getParam("child_frame",child_frame);
+
+        ROS_INFO("\n    Root frame: %s, Child Frame %s", root_frame.c_str(), child_frame.c_str() );
+
+        sub = n.subscribe("input_odom", 1, &tf_sub_pub::callback, this); 
+        }
+
+    void callback(const nav_msgs::Odometry::ConstPtr& msg){
+        
+        tf::Transform transform; //creo la transform
+        transform.setOrigin( tf::Vector3(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z) ); //Setto il primo elemento della transform: la position
+        
+        tf::Quaternion q; //Creo il quaternion
+        q.setRPY(0, 0, msg->pose.pose.orientation.w); //Setto il RPY:roll, pitch, yaw //DEVO FARE +130??
+        
+        transform.setRotation(q); //Setto il secondo elemento della transform: l'orientamento
+        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), root_frame, child_frame)); //Pubblico la transformation
+    }
+
+};
+
+
 int main(int argc, char **argv){
-    
+ ros::init(argc, argv, "odom_to_tf");
+ tf_sub_pub my_tf_sub_pub;
+ ros::spin();
+ return 0;
 }

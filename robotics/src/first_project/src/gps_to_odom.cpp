@@ -15,143 +15,202 @@ Il gps ti dà una posizione ma non l'orientation, devo computarla: ho multiple p
 -> computo l'orientamento usando i punti consecutivi (la linea che passa tra i due punti) che mi sono trovato prima con ENU
 */
 
-#include "ros/ros.h" 
-#include "nav_msgs/Odometry.h"  
+#include "ros/ros.h"
+#include "nav_msgs/Odometry.h"
 #include "sensor_msgs/NavSatFix.h"
-#include "math.h"
+#include "cmath"
 #include "typeinfo"
 #include <sstream>
 
-std::float_t lat_r;
-std::float_t lon_r;
-std::float_t alt_r;  
+class pub_sub
+{
+
+        std::float_t lat_r;
+        std::float_t lon_r;
+        std::float_t alt_r;
+
+        const double conversion = M_PI/180;
+
+        nav_msgs::Odometry messaggio; 
+
+        float ori, ori2; //DA TOGLIERE, solo per prova
+
+        float x_prev=0, y_prev=0, z_prev=0;
+
+    private:
+
+        ros::NodeHandle n; //forse devo usare più di 1 handler per fare pub e sub in contemporanea
+        ros::Subscriber sub;
+        ros::Publisher pub;
+
+        ros::Subscriber sub2; //DA TOGLIERE, solo per prova
+
+    public: pub_sub(){
+
+        n.getParam("lat_r", lat_r); //prendo i parametri dal launchfile
+        n.getParam("lon_r", lon_r);
+        n.getParam("alt_r", alt_r);
+        
+        ROS_INFO("\n    lat_r: %f, lon_r: %f, alt_r: %f", lat_r, lon_r, alt_r );
+
+        sub2 = n.subscribe("odom", 1, &pub_sub::callback2, this); //DA TOGLIERE
 
 
-float ToRad(float grad) {
-    return (grad*M_PI)/180.0;
-}
+        //Subscriber
+        sub = n.subscribe("fix", 1, &pub_sub::callback, this); //topic: fix, buffer: dimensione 1, il subscriber chiama la funzione
+        //Publisher
+        pub = n.advertise<nav_msgs::Odometry>("gps_odom", 1); // tdye: nav_msgs/Odometry, topic: gps_odom, buffer: dimensione 1 (good practice)
 
-float castLatToECEF(float n, float alt, float lat_rad, float lon_rad) {
-    float x = (n + alt) * cos(lat_rad) * cos(lon_rad);
-    return x;
-}
+    }
 
-float castLonToECEF(float n, float alt, float lat_rad, float lon_rad) {
-    float y = (n + alt) * cos(lat_rad) * sin(lon_rad);
-    return y;
-}
+    void callback2(const nav_msgs::Odometry::ConstPtr& msg){ //DA TOGLIERE
+        float y_real = msg->pose.pose.position.y;
+        float x_real = msg->pose.pose.position.x;
+        ori = atan2( y_real, x_real);
+    }
 
-float castAltToECEF(float n, float alt, float lat_rad, float e2) {
-    float z = (n * (1.0 - e2) + alt) * sin(lat_rad);
-    return z;
-}
+    void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo messaggio
 
-/*
-float* castToENU(float lat, float lon, float xp, float yp, float zp){
+        //ROS_INFO("\n header %d", msg->header.seq);
+        //ROS_INFO("\n lat %f, lon %f, alt %f", msg->latitude, msg->longitude, msg->altitude);
 
-    float slat = sin(ToRad(lat));
-    float clat = cos(ToRad(lat));
-    float slon = sin(ToRad(lon));
-    float clon = cos(ToRad(lon));
-    float coords[3];
+        float lat = msg->latitude; 
+        float lon = msg->longitude; 
+        float alt = msg->altitude; 
 
-    coords[0] = -slon*xp + clon*yp;
-    coords[1] = -slat*clon*xp - slat*slon*yp + clat*zp;
-    coords[2] = clat*clon*xp + clat*slon*yp + slat*zp;
+        float lat_r_ecef = lat_r;
+        float lon_r_ecef = lon_r;
+        float alt_r_ecef = alt_r;
 
-    return coords;
+        ROS_INFO("\n\n  GPS: x %f, y %f, z %f", lat, lon, alt);
 
-}
-*/
+        //cast to ECEF
+        castToECEF(&lat, &lon, &alt); //così ottengo Xp Yp Zp
+        castToECEF(&lat_r_ecef, &lon_r_ecef, &alt_r_ecef); //così ottengo Xr Yr Zr
 
+        ROS_INFO("\n    ECEF: x %f, y %f, z %f", lat, lon, alt);
 
+        //cast to ENU
+        castToENU(&lat, &lon, &alt, &lat_r_ecef, &lon_r_ecef, &alt_r_ecef);
 
-void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo messaggio
-    
-    ROS_INFO("header %d\n", msg->header.seq);
-    ROS_INFO("lat %f, lon %f, alt %f\n", msg->latitude, msg->longitude, msg->altitude);
+        ROS_INFO("\n    ENU: x %f, y %f, z %f", lat, lon, alt);
 
-    
-    float lat = msg->latitude;
-    float lon = msg->longitude;
-    float alt = msg->altitude;
+        //Computo orientamento
+        float ori2 = atan2( lon, lat); //x_real are the values taken directly from /odom through a subscriber and x, y are the computed, not rotated ENU values.
+        float diff = ori-ori2;
+        ROS_INFO("\n    ANGOLO: %f", diff/conversion);
 
-    float a = 6378137.0; 
-    float b = 6356752.0; 
-    float e2 = 1 - (b*b)/(a*a);
-    float n = a / sqrt(1.0 - e2 * sin(ToRad(lat_r)) * sin(ToRad(lat_r)));
- 
-    float x_ecef_rif = castLatToECEF(n, alt,ToRad(lat_r), ToRad(lon_r));
-    float y_ecef_rif = castLonToECEF(n, alt,ToRad(lat_r), ToRad(lon_r));
-    float z_ecef_rif = castAltToECEF(n, alt,ToRad(lat_r), e2);
+        //Ruoto le coordinate
+        float x = lat*cos(-130*conversion)+lon*sin(-130*conversion);
+        float y = -lat*sin(-130*conversion)+lon*cos(-130*conversion);
+        float z = alt;
 
-    ROS_INFO("ECEF_RIF: x %f, y %f, z %f\n", x_ecef_rif, y_ecef_rif, z_ecef_rif);
+        ROS_INFO("\n    COORD RUOTATE: x %f, y %f, z %f", x, y, z);
 
-    //cast to ECEF
+        //Computo la orientation (Quaternion: z e w)
+        float zq;
+        float w;
+        orientation(x, y, z, x_prev, y_prev, z_prev, &zq, &w);
 
-    float x_ecef = castLatToECEF(n, alt, ToRad(lat), ToRad(lon));
-    float y_ecef = castLonToECEF(n, alt, ToRad(lat), ToRad(lon));
-    float z_ecef = castAltToECEF(n, alt, ToRad(lat), e2);
+        ROS_INFO("\n    QUATERNIONE: z %f, w %f", zq, w);
 
+        //Publisher
+        messaggio.pose.pose.position.x = x;
+        messaggio.pose.pose.position.y = y;
+        messaggio.pose.pose.position.z = z;
 
+        messaggio.pose.pose.orientation.x = 0; //0 perchè il piano è 2D
+        messaggio.pose.pose.orientation.y = 0;
+        messaggio.pose.pose.orientation.z = zq;
+        messaggio.pose.pose.orientation.w = w;
 
-    //castToECEF(&lat, &lon, &alt);
+        pub.publish(messaggio);
 
-    ROS_INFO("ECEF: x %f, y %f, z %f\n", x_ecef, y_ecef, z_ecef);
+        x_prev=x;
+        y_prev=y;
+        z_prev=alt;
+    }
 
-    //cast to ENU
+    void castToECEF(float* lat, float* lon, float* alt){
 
-    float xp = x_ecef - x_ecef_rif;
-    float yp = y_ecef - y_ecef_rif;
-    float zp = z_ecef - z_ecef_rif;
+        // Conversione da gradi a radianti
+        float lat_rad = *lat * conversion;
+        float lon_rad = *lon * conversion;
 
-    ROS_INFO("partial: xp %f, yp %f, zp %f\n", xp, yp, zp);
+        float a = 6378137.0;
+        float b = 6356752.0;
+        float e2 = 1 - (b*b)/(a*a);
+        float n = a / sqrt(1.0 - e2 * sin(lat_rad) * sin(lat_rad));
 
-    float slat = sin(ToRad(lat));
-    float clat = cos(ToRad(lat));
-    float slon = sin(ToRad(lon));
-    float clon = cos(ToRad(lon));
-    float coords[3];
+        // Calcolo delle coordinate ECEF
+        float x = (n + *alt) * cos(lat_rad) * cos(lon_rad);
+        float y = (n + *alt) * cos(lat_rad) * sin(lon_rad);
+        float z = (n * (1.0 - e2) + *alt) * sin(lat_rad);
 
-    coords[0] = -slon*xp + clon*yp;
-    coords[1] = -slat*clon*xp - slat*slon*yp + clat*zp;
-    coords[2] = clat*clon*xp + clat*slon*yp + slat*zp;
+        // Assegnazione delle coordinate ECEF alle variabili di output
+        *lat = x;
+        *lon = y;
+        *alt = z;
+    }
 
-    ROS_INFO("ENU: x %f, y %f, z %f\n", coords[0], coords[1], coords[2]);
-    
-}
+    void castToENU(float* Xp, float* Yp, float* Zp, float* Xr, float* Yr, float* Zr){
 
+        //Conversione da gradi a radianti
+        float lat_rad = lat_r * conversion;
+        float lon_rad = lon_r * conversion;
 
+        //calcolo seni e coseni delle lat e long di riferimento
+        float slat = sin(lat_rad);
+        float clat = cos(lat_rad);
+        float slon = sin(lon_rad);
+        float clon = cos(lon_rad);
+
+        //calcolo la differenza
+        float dx = *Xp - *Xr;
+        float dy = *Yp - *Yr;
+        float dz = *Zp - *Zr;
+
+        //calcolo il prodotto matriciale
+        float x = -slon*dx + clon*dy;
+        float y = -slat*clon*dx - slat*slon*dy + clat*dz;
+        float z = clat*clon*dx + clat*slon*dy + slat*dz;
+
+        //Assegno i valori
+        *Xp=x;
+        *Yp=y;
+        *Zp=z;
+    }
+
+    void orientation(float x, float y, float z, float x_prev, float y_prev, float z_prev, float* zq, float* w){
+        // Calcola il vettore di spostamento tra due punti consecutivi
+        double delta_x = x - x_prev;
+        double delta_y = y - y_prev;
+        double delta_z = z - z_prev;
+
+        // Normalizza il vettore per ottenere le direzioni
+        double norm = std::sqrt(delta_x * delta_x + delta_y * delta_y + delta_z * delta_z);
+        double dir_x = delta_x / norm;
+        double dir_y = delta_y / norm;
+        double dir_z = delta_z / norm;
+
+        // Calcola l'angolo tra la direzione iniziale e quella corrente     //PROBABILMENTE DA QUI IN POI È SBAGLIATO
+        double angle = std::acos(dir_z);
+
+        // Calcola i componenti zq e w del quaternion
+        double half_angle = angle / 2.0;
+        double z_quat = std::sin(half_angle);
+        double w_quat = std::cos(half_angle);
+
+        *zq = z_quat;
+        *w = w_quat;
+    }
+
+};
 
 int main(int argc, char **argv){
 
     ros::init(argc, argv, "gps_to_odom");
-    ros::NodeHandle n; //forse devo usare più di 1 handler per fare pub e sub in contemporanea
-
-	n.getParam("lat_r", lat_r); //prendo i parametri dal launchfile
-	n.getParam("lon_r", lon_r);
-	n.getParam("alt_r", alt_r);
-
-
-    //Subscriber
-    ros::Subscriber sub = n.subscribe("fix", 1, callback); //topic: fix, buffer: dimensione 1, il subscriber chiama la funzione
-    ros::spin(); //cicla aspettando i messaggi
-    
-
-    /*
-    //Publisher
-   	ros::Publisher pub = n.advertise<nav_msgs::Odometry>("gps_odom", 1); // type: nav_msgs/Odometry, topic: gps_odom, buffer: dimensione 1 (good practice)
-    nav_msgs::Odometry odom; //creo il messaggio
-    //odom.pose.x = 1; //assegnao il valore (probabilmente sbagliato)
-    pub.publish(odom);
-
-    //Loop
-    ros::Rate loop_rate(10); //loop MANUALE a 10hz 
-  	while (ros::ok()){ //loop
-        //qua eseguo qualcosa
-    	ros::spinOnce();
-    	loop_rate.sleep(); 
-  	}
-    //oppure loop AUTOMATICO:  ros::spin();
-    */
+    pub_sub my_pub_sub;
+    ros::spin();
+ 	return 0;    
 }
