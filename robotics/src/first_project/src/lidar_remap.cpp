@@ -11,16 +11,17 @@ Il nodo deve permettere all'utente di selezionare da rqt_reconfigure a quale tf 
 
 */
 
-#include "ros/ros.h" 
+#include "ros/ros.h"
 #include "sensor_msgs/PointCloud2.h"
-
-
+#include "string.h"
+#include <sstream>
 
 void callback(const sensor_msgs::PointCloud2& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo messaggio
 
 
-    ROS_INFO("header %d", msg.header);  //print header, not sure if it is the correct header, need to find the correct type
-}
+    ROS_INFO("header %s", msg.header.frame_id.c_str());  //print if the reference is gps or wheel odom
+    
+    }
 
 int main(int argc, char **argv){
     
