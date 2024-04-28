@@ -22,22 +22,23 @@ Il gps ti dà una posizione ma non l'orientation, devo computarla: ho multiple p
 #include "typeinfo"
 #include <sstream>
 
+
 class pub_sub
 {
 
-        std::float_t lat_r;
-        std::float_t lon_r;
-        std::float_t alt_r;
+        double lat_r;
+        double lon_r;
+        double alt_r;
 
         const double conversion = M_PI/180;
 
         nav_msgs::Odometry message; 
 
-        float x_prev=0, y_prev=0, z_prev=0;
+        double x_prev=0, y_prev=0, z_prev=0;
 
     private:
 
-        ros::NodeHandle n; //forse devo usare più di 1 handler per fare pub e sub in contemporanea
+        ros::NodeHandle n; 
         ros::Subscriber sub;
         ros::Publisher pub;
 
@@ -52,7 +53,7 @@ class pub_sub
         //Subscriber
         sub = n.subscribe("fix", 1, &pub_sub::callback, this); //topic: fix, buffer: dimensione 1, il subscriber chiama la funzione
         //Publisher
-        pub = n.advertise<nav_msgs::Odometry>("gps_odom", 1); // tdye: nav_msgs/Odometry, topic: gps_odom, buffer: dimensione 1 (good practice)
+        pub = n.advertise<nav_msgs::Odometry>("gps_odom", 1); // type: nav_msgs/Odometry, topic: gps_odom, buffer: dimensione 1 (good practice)
 
     }
 
@@ -61,13 +62,13 @@ class pub_sub
         //ROS_INFO("\n header %d", msg->header.seq);
         //ROS_INFO("\n lat %f, lon %f, alt %f", msg->latitude, msg->longitude, msg->altitude);
 
-        float lat = msg->latitude; 
-        float lon = msg->longitude; 
-        float alt = msg->altitude; 
+        double lat = msg->latitude; 
+        double lon = msg->longitude; 
+        double alt = msg->altitude; 
 
-        float lat_r_ecef = lat_r;
-        float lon_r_ecef = lon_r;
-        float alt_r_ecef = alt_r;
+        double lat_r_ecef = lat_r;
+        double lon_r_ecef = lon_r;
+        double alt_r_ecef = alt_r;
 
         ROS_INFO("\n\n  GPS: x %f, y %f, z %f", lat, lon, alt);
 
@@ -83,15 +84,15 @@ class pub_sub
         ROS_INFO("\n    ENU: x %f, y %f, z %f", lat, lon, alt);
 
         //Ruoto le coordinate
-        float x = lat*cos(-130*conversion)+lon*sin(-130*conversion);
-        float y = -lat*sin(-130*conversion)+lon*cos(-130*conversion);
-        float z = alt;
+        double x = lat*cos(-130*conversion)+lon*sin(-130*conversion);
+        double y = -lat*sin(-130*conversion)+lon*cos(-130*conversion);
+        double z = alt;
 
         ROS_INFO("\n    COORD RUOTATE: x %f, y %f, z %f", x, y, z);
 
         //Computo la orientation (Quaternion: z e w)
-        float zq;
-        float w;
+        double zq;
+        double w;
         orientation(x, y, z, x_prev, y_prev, z_prev, &zq, &w);
 
         ROS_INFO("\n    QUATERNIONE: z %f, w %f", zq, w);
@@ -102,7 +103,7 @@ class pub_sub
         message.pose.pose.position.z = z;
 
         message.pose.pose.orientation.x = 0; //0 perchè il piano è 2D
-        message.pose.pose.orientation.y = 0;
+        message.pose.pose.orientation.y = 0; //0 perchè il piano è 2D
         message.pose.pose.orientation.z = zq;
         message.pose.pose.orientation.w = w;
 
@@ -110,24 +111,25 @@ class pub_sub
 
         x_prev=x; //le coordinate correnti diventano le coordinate precedenti
         y_prev=y;
-        z_prev=alt;
+        z_prev=z;
+
     }
 
-    void castToECEF(float* lat, float* lon, float* alt){
+    void castToECEF(double* lat, double* lon, double* alt){
 
         // Conversione da gradi a radianti
-        float lat_rad = *lat * conversion;
-        float lon_rad = *lon * conversion;
+        double lat_rad = *lat * conversion;
+        double lon_rad = *lon * conversion;
 
-        float a = 6378137.0;
-        float b = 6356752.0;
-        float e2 = 1 - (b*b)/(a*a);
-        float n = a / sqrt(1.0 - e2 * sin(lat_rad) * sin(lat_rad));
+        double a = 6378137.0;
+        double b = 6356752.0;
+        double e2 = 1 - (b*b)/(a*a);
+        double n = a / sqrt(1.0 - e2 * sin(lat_rad) * sin(lat_rad));
 
         // Calcolo delle coordinate ECEF
-        float x = (n + *alt) * cos(lat_rad) * cos(lon_rad);
-        float y = (n + *alt) * cos(lat_rad) * sin(lon_rad);
-        float z = (n * (1.0 - e2) + *alt) * sin(lat_rad);
+        double x = (n + *alt) * cos(lat_rad) * cos(lon_rad);
+        double y = (n + *alt) * cos(lat_rad) * sin(lon_rad);
+        double z = (n * (1.0 - e2) + *alt) * sin(lat_rad);
 
         // Assegnazione delle coordinate ECEF alle variabili di output
         *lat = x;
@@ -135,27 +137,27 @@ class pub_sub
         *alt = z;
     }
 
-    void castToENU(float* Xp, float* Yp, float* Zp, float* Xr, float* Yr, float* Zr){
+    void castToENU(double* Xp, double* Yp, double* Zp, double* Xr, double* Yr, double* Zr){
 
         //Conversione da gradi a radianti
-        float lat_rad = lat_r * conversion;
-        float lon_rad = lon_r * conversion;
+        double lat_rad = lat_r * conversion;
+        double lon_rad = lon_r * conversion;
 
         //calcolo seni e coseni delle lat e long di riferimento
-        float slat = sin(lat_rad);
-        float clat = cos(lat_rad);
-        float slon = sin(lon_rad);
-        float clon = cos(lon_rad);
+        double slat = sin(lat_rad);
+        double clat = cos(lat_rad);
+        double slon = sin(lon_rad);
+        double clon = cos(lon_rad);
 
         //calcolo la differenza
-        float dx = *Xp - *Xr;
-        float dy = *Yp - *Yr;
-        float dz = *Zp - *Zr;
+        double dx = *Xp - *Xr;
+        double dy = *Yp - *Yr;
+        double dz = *Zp - *Zr;
 
         //calcolo il prodotto matriciale
-        float x = -slon*dx + clon*dy;
-        float y = -slat*clon*dx - slat*slon*dy + clat*dz;
-        float z = clat*clon*dx + clat*slon*dy + slat*dz;
+        double x = -slon*dx + clon*dy;
+        double y = -slat*clon*dx - slat*slon*dy + clat*dz;
+        double z = clat*clon*dx + clat*slon*dy + slat*dz;
 
         //Assegno i valori
         *Xp=x;
@@ -163,7 +165,7 @@ class pub_sub
         *Zp=z;
     }
 
-    void orientation(float x, float y, float z, float x_prev, float y_prev, float z_prev, float* zq, float* w){
+    void orientation(double x, double y, double z, double x_prev, double y_prev, double z_prev, double* zq, double* w){
         // Calcola il vettore di spostamento tra due punti consecutivi
         double delta_x = x - x_prev;
         double delta_y = y - y_prev;
@@ -173,10 +175,9 @@ class pub_sub
         double norm = std::sqrt(delta_x * delta_x + delta_y * delta_y + delta_z * delta_z);
         double dir_x = delta_x / norm;
         double dir_y = delta_y / norm;
-        double dir_z = delta_z / norm;
 
-        // Calcola l'angolo tra la direzione iniziale e quella corrente     //PROBABILMENTE DA QUI IN POI È SBAGLIATO
-        double angle = std::acos(dir_z);
+        // Calcola l'angolo tra la direzione iniziale e quella corrente   
+        double angle = std::atan2(dir_y, dir_x);
 
         // Calcola i componenti zq e w del quaternion
         double half_angle = angle / 2.0;

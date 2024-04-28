@@ -12,18 +12,18 @@
     </group>
 
     <group ns="group2">
-        <remap from="input_odom" to="wheel_odom"/>
-
         <node pkg="first_project" type = "odom_to_tf" name = "odom_to_tf" output="screen">
+            <remap from="input_odom" to="odom"/> <!--invece di iscriversi a wheel_odom si iscrive a odom-->
+
             <param name="root_frame" value="world"  /> 
             <param name="child_frame" value="wheel_odom"  />
         </node>
     </group>
 
     <group ns="group3">
-        <remap from="input_odom" to="gps_odom"/>
-
         <node pkg="first_project" type = "odom_to_tf" name = "odom_to_tf" output="screen">
+            <remap from="input_odom" to="gps_odom"/>
+
             <param name="root_frame" value="world"  /> 
             <param name="child_frame" value="gps_odom"  />
         </node>
