@@ -18,6 +18,7 @@ Quello che devo fare: scrivere il nodo, metterlo nel launch file, configurarlo p
 #include "ros/ros.h"
 #include "nav_msgs/Odometry.h"
 #include <tf/transform_broadcaster.h>
+#include <tf/transform_datatypes.h>
 
 class tf_sub_pub{
 
@@ -45,7 +46,16 @@ class tf_sub_pub{
         transform.setOrigin( tf::Vector3(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z) ); //Setto il primo elemento della transform: la position
         
         tf::Quaternion q; //Creo il quaternion
-        q.setRPY(0, 0, msg->pose.pose.orientation.w); //Setto il RPY:roll, pitch, yaw //DEVO FARE +130??
+        
+        //Metodo 1
+        tf::quaternionMsgToTF(msg->pose.pose.orientation, q);
+
+        //Metodo 2 (devo calcolarmi i qx = msg->pose.pose.orientation.x)
+        //double yaw = atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy*qy + qz*qz));
+        //q.setRPY(0,0,yaw); 
+
+        //Metodo 3 (penso sbagliato)
+        //q.setRPY(0, 0, msg->pose.pose.orientation.w); //Setto il RPY:roll, pitch, yaw   
         
         transform.setRotation(q); //Setto il secondo elemento della transform: l'orientamento
         br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), root_frame, child_frame)); //Pubblico la transformation
