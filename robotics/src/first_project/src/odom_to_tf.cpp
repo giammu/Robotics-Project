@@ -48,15 +48,21 @@ class tf_sub_pub{
         tf::Quaternion q; //Creo il quaternion
         
         //Metodo 1
-        tf::quaternionMsgToTF(msg->pose.pose.orientation, q);
+        //tf::quaternionMsgToTF(msg->pose.pose.orientation, q);
 
         //Metodo 2 (devo calcolarmi i qx = msg->pose.pose.orientation.x)
-        //double yaw = atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy*qy + qz*qz));
-        //q.setRPY(0,0,yaw); 
+        double qx = msg->pose.pose.orientation.x;
+        double qy = msg->pose.pose.orientation.y;
+        double qz = msg->pose.pose.orientation.z;
+        double qw = msg->pose.pose.orientation.w;
+
+        double yaw = atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy*qy + qz*qz));
+        q.setRPY(0,0,yaw); 
 
         //Metodo 3 (penso sbagliato)
         //q.setRPY(0, 0, msg->pose.pose.orientation.w); //Setto il RPY:roll, pitch, yaw   
         
+
         transform.setRotation(q); //Setto il secondo elemento della transform: l'orientamento
         br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), root_frame, child_frame)); //Pubblico la transformation
     }

@@ -23,7 +23,7 @@ Il nodo deve permettere all'utente di selezionare da rqt_reconfigure a quale tf 
 
 void callback2(const sensor_msgs::PointCloud2& msg){ 
 
-    msg.header.frame_id = config.header;
+  //msg.header.frame_id = config.header;
 
     ROS_INFO("header %s", msg.header.frame_id.c_str());  //print if the reference is gps or wheel odom
     
