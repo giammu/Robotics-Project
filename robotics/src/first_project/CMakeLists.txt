@@ -90,8 +90,8 @@ find_package(catkin REQUIRED COMPONENTS
 ##     and list every .cfg file to be processed
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
- generate_dynamic_reconfigure_options(
-   cfg/reconfigure.cfg
+generate_dynamic_reconfigure_options(
+   cfg/parameters.cfg
  )
 
 ###################################
@@ -143,6 +143,7 @@ add_executable(odom_to_tf src/odom_to_tf.cpp)
 target_link_libraries(odom_to_tf ${catkin_LIBRARIES})
 
 add_executable(lidar_remap src/lidar_remap.cpp)
+add_dependencies(lidar_remap ${PROJECT_NAME}_gencfg)
 target_link_libraries(lidar_remap ${catkin_LIBRARIES})
 
 ## Rename C++ executable without prefix

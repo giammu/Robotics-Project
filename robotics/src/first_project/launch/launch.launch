@@ -4,30 +4,40 @@
 <launch> 
 
     <group ns="group1">
+        <param name="lat_r" value="45.477669"/> 
+        <param name="lon_r" value="9.226740"/> 
+        <param name="alt_r" value="169.039000"/>
+
         <node pkg="first_project" type = "gps_to_odom" name = "gps_to_odom" output="screen">
-            <param name="lat_r" value="45.477669"/> 
-            <param name="lon_r" value="9.226740"/> 
-            <param name="alt_r" value="169.039000"/>
+            
         </node>
     </group>
 
     <group ns="group2">
+        <param name="root_frame" value="world"  /> 
+        <param name="child_frame" value="wheel_odom"  />
+
         <node pkg="first_project" type = "odom_to_tf" name = "odom_to_tf" output="screen">
             <remap from="input_odom" to="odom"/> <!--invece di iscriversi a wheel_odom si iscrive a odom-->
-
-            <param name="root_frame" value="world"  /> 
-            <param name="child_frame" value="wheel_odom"  />
+            
         </node>
     </group>
 
     <group ns="group3">
+        <param name="root_frame" value="world"  /> 
+        <param name="child_frame" value="gps_odom"  />
+
         <node pkg="first_project" type = "odom_to_tf" name = "odom_to_tf" output="screen">
             <remap from="input_odom" to="gps_odom"/>
 
-            <param name="root_frame" value="world"  /> 
-            <param name="child_frame" value="gps_odom"  />
         </node>
     </group>
+
+    <group ns="group4">
+        <node pkg="first_project" type = "lidar_remap" name = "lidar_remap" output="screen">
+        </node>
+    </group>
+
 
     <node type="rviz" name="rviz" pkg="rviz" args="-d $first_project/rviz/config_file.rviz" /> <!--Apro Rviz per visualizzare i dati-->
 
