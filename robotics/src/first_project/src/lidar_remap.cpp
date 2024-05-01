@@ -20,6 +20,100 @@ Il nodo deve permettere all'utente di selezionare da rqt_reconfigure a quale tf 
 #include <first_project/parametersConfig.h> // nome_package/"stringWroteInsideTheConfigurationFile" combined with "Config.h"
 
 
+class LidarRemap
+{
+    private:
+        ros::NodeHandle n;
+        ros::Subscriber sub;
+        ros::Publisher pub;
+        dynamic_reconfigure::Server<first_project::parametersConfig> server;
+        sensor_msgs::PointCloud2 message;
+        first_project::parametersConfig configurazione;
+
+    public: LidarRemap(){
+            sub = n.subscribe("/os_cloud_node/points", 1, &LidarRemap::callback, this);
+            pub = n.advertise<sensor_msgs::PointCloud2>("/pointcloud_remapped", 1);
+
+            dynamic_reconfigure::Server<first_project::parametersConfig>::CallbackType f;
+            f = boost::bind(&LidarRemap::reconfigureCallback, this, _1, _2);
+            server.setCallback(f);
+        }
+
+        void callback(const sensor_msgs::PointCloud2& msg)
+        {
+            message = msg;
+            message.header.stamp = ros::Time::now(); //corregge l'errore in rviz dei messaggi scartati perchè troppo vecchi
+            ROS_INFO("Old frame: %s", msg.header.frame_id.c_str());
+            message.header.frame_id = configurazione.header;
+            ROS_INFO("New frame: %s", message.header.frame_id.c_str());
+            pub.publish(message);
+        }
+
+        void reconfigureCallback(first_project::parametersConfig &config, uint32_t level)
+        {
+            ROS_INFO("New Header: %s, level %d", config.header.c_str(), level);
+            configurazione.header = config.header;
+        }
+};
+
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "lidar_remap");
+
+    LidarRemap my_lidar_remap;
+
+    ros::spin();
+
+    return 0;
+}
+
+/*
+class LidarRemap
+{
+    private:
+        ros::NodeHandle n;
+        ros::Subscriber sub;
+        ros::Publisher pub;
+        dynamic_reconfigure::Server<first_project::parametersConfig> server;
+        sensor_msgs::PointCloud2 message;
+
+    public: LidarRemap(){
+            sub = n.subscribe("/os_cloud_node/points", 1, &LidarRemap::callback, this);
+            pub = n.advertise<sensor_msgs::PointCloud2>("/pointcloud_remapped", 1);
+
+            dynamic_reconfigure::Server<first_project::parametersConfig>::CallbackType f;
+            f = boost::bind(&LidarRemap::reconfigureCallback, this, _1, _2);
+            server.setCallback(f);
+        }
+
+        void callback(const sensor_msgs::PointCloud2& msg)
+        {
+            message = msg;
+            message.header.stamp = ros::Time::now(); //corregge l'errore in rviz dei messaggi scartati perchè troppo vecchi
+            ROS_INFO("Old header: %s", msg.header.frame_id.c_str());
+        }
+
+        void reconfigureCallback(first_project::parametersConfig &config, uint32_t level)
+        {
+            ROS_INFO("New Header: %s, level %d", config.header.c_str(), level);
+            message.header.frame_id = config.header;
+            pub.publish(message);
+        }
+};
+
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "lidar_remap");
+
+    LidarRemap my_lidar_remap;
+
+    ros::spin();
+
+    return 0;
+}
+*/
+
+/*
 sensor_msgs::PointCloud2 message;
 
 void callback2(const sensor_msgs::PointCloud2& msg){ 
@@ -36,11 +130,11 @@ void callback(first_project::parametersConfig &config, uint32_t level) { //la ca
 
     ROS_INFO("Reconfigure Request: %s, level %d ", config.header.c_str(), level);  //se voglio vedere quale sta cambiando mi basta vedere il level
 
-    ros::Subscriber sub = n.subscribe("os_cloud_node/points", 1, callback2); 
+    ros::Subscriber sub = n.subscribe("/os_cloud_node/points", 1, callback2); 
 
     message.header.frame_id = config.header;
 
-    ros:: Publisher pub = n.advertise<sensor_msgs::PointCloud2>("pointcloud_remapped", 1); // type: nav_msgs/Odometry, topic: gps_odom, buffer: dimensione 1 (good practice)
+    ros:: Publisher pub = n.advertise<sensor_msgs::PointCloud2>("/pointcloud_remapped", 1); // type: nav_msgs/Odometry, topic: gps_odom, buffer: dimensione 1 (good practice)
     
     pub.publish(message);
 }
@@ -57,4 +151,4 @@ int main(int argc, char **argv) {
     ros::spin(); //il nodo continua ad andare in attesa che succeda qualcosa sulla dynamic reconfigure, triggerando la callback
     return 0;
 }
-
+*/

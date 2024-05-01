@@ -51,9 +51,9 @@ class pub_sub
         ROS_INFO("\n    lat_r: %f, lon_r: %f, alt_r: %f", lat_r, lon_r, alt_r );
 
         //Subscriber
-        sub = n.subscribe("fix", 1, &pub_sub::callback, this); //topic: fix, buffer: dimensione 1, il subscriber chiama la funzione
+        sub = n.subscribe("/fix", 1, &pub_sub::callback, this); //topic: fix, buffer: dimensione 1, il subscriber chiama la funzione
         //Publisher
-        pub = n.advertise<nav_msgs::Odometry>("gps_odom", 1); // type: nav_msgs/Odometry, topic: gps_odom, buffer: dimensione 1 (good practice)
+        pub = n.advertise<nav_msgs::Odometry>("/gps_odom", 1); // type: nav_msgs/Odometry, topic: gps_odom, buffer: dimensione 1 (good practice)
 
     }
 
