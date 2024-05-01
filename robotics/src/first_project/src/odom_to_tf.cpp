@@ -1,5 +1,5 @@
 /*
- Secondo nodo: odom_to_tf: si iscrive a odometry e pubblica su tf (è estremamente simile a quello visto durante il lab 5: cambio il nome/tipo dei topic)
+Descrizione Secondo nodo: odom_to_tf: si iscrive a odometry e pubblica su tf (è estremamente simile a quello visto durante il lab 5: cambio il nome/tipo dei topic)
 
 Si iscrive all'odometry
     type: nav_msgs/Odometry
@@ -35,7 +35,7 @@ class tf_sub_pub{
         n.getParam("root_frame",root_frame);
         n.getParam("child_frame",child_frame);
 
-        ROS_INFO("\n    Root frame: %s, Child Frame %s", root_frame.c_str(), child_frame.c_str() );
+        //ROS_INFO("\n    Root frame: %s, Child Frame %s", root_frame.c_str(), child_frame.c_str() );
 
         sub = n.subscribe("input_odom", 1, &tf_sub_pub::callback, this); 
         }
@@ -48,20 +48,15 @@ class tf_sub_pub{
         tf::Quaternion q; //Creo il quaternion
         
         //Metodo 1
-        tf::quaternionMsgToTF(msg->pose.pose.orientation, q);
+        tf::quaternionMsgToTF(msg->pose.pose.orientation, q); //converto il quaternion da msg a tf
 
-        //Metodo 2 
-        //double qx = msg->pose.pose.orientation.x;
-        //double qy = msg->pose.pose.orientation.y;
-        //double qz = msg->pose.pose.orientation.z;
-        //double qw = msg->pose.pose.orientation.w;
-
-        //double yaw = atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy*qy + qz*qz));
-        //q.setRPY(0,0,yaw); 
-
-        //Metodo 3 (penso sbagliato)
-        //q.setRPY(0, 0, msg->pose.pose.orientation.w); //Setto il RPY:roll, pitch, yaw   
-        
+        /*Metodo 2 
+        double qx = msg->pose.pose.orientation.x;
+        double qy = msg->pose.pose.orientation.y;
+        double qz = msg->pose.pose.orientation.z;
+        double qw = msg->pose.pose.orientation.w;
+        double yaw = atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy*qy + qz*qz));
+        q.setRPY(0,0,yaw);*/
 
         transform.setRotation(q); //Setto il secondo elemento della transform: l'orientamento
         br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), root_frame, child_frame)); //Pubblico la transformation

@@ -18,7 +18,7 @@
         <param name="child_frame" value="/wheel_odom"  />
 
         <node pkg="first_project" type = "odom_to_tf" name = "odom_to_tf" output="screen">
-            <remap from="input_odom" to="/odom"/> <!--invece di iscriversi a wheel_odom si iscrive a odom-->
+            <remap from="input_odom" to="/odom"/> <!--si iscrive alla wheel_odom pubblicata da odom-->
             
         </node>
     </group>
@@ -39,9 +39,9 @@
     </group>
 
 
-    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find first_project)/rviz/config_file.rviz" /> <!--Apro Rviz per visualizzare i dati-->
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find first_project)/rviz/config_file.rviz" /> <!--Apro Rviz per visualizzare i dati, usando il file di configurazione-->
 
-    <node type="rqt_reconfigure" name="my_rqt_reconfigure" pkg="rqt_reconfigure" args="/group4/lidar_remap" />
+    <node type="rqt_reconfigure" name="my_rqt_reconfigure" pkg="rqt_reconfigure" args="/group4/lidar_remap" /> <!--Apro rqt_reconfigure specificando il nodo che contiene il server-->
 
 </launch> 
 

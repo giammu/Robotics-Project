@@ -1,5 +1,5 @@
 /*
-Primo Nodo: deve computare la odometry dai gps data
+Descrizione Primo Nodo: deve computare la odometry dai gps data
 
 The node subscribe to fix and publish the odometry message:
     type: nav_msgs/Odometry
@@ -11,7 +11,7 @@ ENU è relativo: fornisco la starting position: di solito si mette la zero posit
 
 3 parametri del nodo: lat_r, lon_r, alt_r -> devo settarli manualmente nel launch file con il primo valore del gps
 
-Il gps ti dà una posizione ma non l'orientation, devo computarla: ho multiple points (è la trajectory e il gps funziona a 10hz)
+Il gps dà una posizione ma non l'orientation, devo computarla: ho multiple points (è la trajectory e il gps funziona a 10hz)
 -> computo l'orientamento usando i punti consecutivi (la linea che passa tra i due punti) che mi sono trovato prima con ENU
 */
 
@@ -48,7 +48,7 @@ class pub_sub
         n.getParam("lon_r", lon_r);
         n.getParam("alt_r", alt_r);
         
-        ROS_INFO("\n    lat_r: %f, lon_r: %f, alt_r: %f", lat_r, lon_r, alt_r );
+        //ROS_INFO("\n    lat_r: %f, lon_r: %f, alt_r: %f", lat_r, lon_r, alt_r );
 
         //Subscriber
         sub = n.subscribe("/fix", 1, &pub_sub::callback, this); //topic: fix, buffer: dimensione 1, il subscriber chiama la funzione
@@ -57,7 +57,7 @@ class pub_sub
 
     }
 
-    void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ //funzione chiamata automaticamente ogni volta che arriva un nuovo message
+    void callback(const sensor_msgs::NavSatFix::ConstPtr& msg){ 
 
         //ROS_INFO("\n header %d", msg->header.seq);
         //ROS_INFO("\n lat %f, lon %f, alt %f", msg->latitude, msg->longitude, msg->altitude);
@@ -70,32 +70,32 @@ class pub_sub
         double lon_r_ecef = lon_r;
         double alt_r_ecef = alt_r;
 
-        ROS_INFO("\n\n  GPS: x %f, y %f, z %f", lat, lon, alt);
+        //ROS_INFO("\n\n  GPS: x %f, y %f, z %f", lat, lon, alt);
 
         //cast to ECEF
         castToECEF(&lat, &lon, &alt); //così ottengo Xp Yp Zp
         castToECEF(&lat_r_ecef, &lon_r_ecef, &alt_r_ecef); //così ottengo Xr Yr Zr
 
-        ROS_INFO("\n    ECEF: x %f, y %f, z %f", lat, lon, alt);
+        //ROS_INFO("\n    ECEF: x %f, y %f, z %f", lat, lon, alt);
 
         //cast to ENU
         castToENU(&lat, &lon, &alt, &lat_r_ecef, &lon_r_ecef, &alt_r_ecef);
 
-        ROS_INFO("\n    ENU: x %f, y %f, z %f", lat, lon, alt);
+        //ROS_INFO("\n    ENU: x %f, y %f, z %f", lat, lon, alt);
 
         //Ruoto le coordinate
         double x = lat*cos(-130*conversion)+lon*sin(-130*conversion);
         double y = -lat*sin(-130*conversion)+lon*cos(-130*conversion);
         double z = alt;
 
-        ROS_INFO("\n    COORD RUOTATE: x %f, y %f, z %f", x, y, z);
+        //ROS_INFO("\n    COORD RUOTATE: x %f, y %f, z %f", x, y, z);
 
         //Computo la orientation (Quaternion: z e w)
         double zq;
         double w;
         orientation(x, y, z, x_prev, y_prev, z_prev, &zq, &w);
 
-        ROS_INFO("\n    QUATERNIONE: z %f, w %f", zq, w);
+        //ROS_INFO("\n    QUATERNIONE: z %f, w %f", zq, w);
 
         //Publisher
         message.pose.pose.position.x = x;
