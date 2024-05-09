@@ -1,3 +1,7 @@
 robotics/src/bags/robotics.bag 
 build/
 .vscode/settings.json
+comandi.sh
+run_vnc.sh
+robotics/docker/run_vnc.sh
+robotics/comandi_docker.sh

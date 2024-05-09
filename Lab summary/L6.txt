@@ -1,0 +1,48 @@
+Message Filters
+
+si usa per sincronizzare messaggi che arrivano allo stesso momento
+
+Posso avere una callback per più topic, quando li ricevo allo stesso momento
+
+apri file: message_filters/src/pub.cpp
+
+apri file: message_filters/src/sub.cpp
+
+provo ad eseguirlo ....
+
+(per rientrare in una tmux session: tmux a -t nomesession)
+
+Prima i messaggi non arrivavano uguali, poi con la modifica abbiamo un modo per correggere....
+Allora usiamo message_filters/src/sub_pol.cpp
+Sincronizza i dati che sono più vicini
+
+---------------------------------------------------------
+ActionLib
+
+di solito non servono, però sono usati molto nei grandi rosbag, es. nella navigation
+
+Sono una versione avanzata dei services, si usano quando le esecuzioni sono lunghe....
+Non ci sono scenari dove devo cancellare i services, però le action richiedono tempo, e quindi ha senso cancellarli perchè così non spreco delle risorse
+
+...
+
+Esempio: calcolare fibonacci
+Simile ai servizi, ho il folder action
+il file action/fibonacci.action serve per definire input/output del server
+
+apri file: fibonacci/src/fibonacci_server.cpp
+apri file: fibonacci/src/fibonacci_client.cpp
+
+più avanzato: ...
+
+apri file: fibonacci/src/fibonacci_client2.cpp
+
+Nella navigation di solito voglio che il mio robot faccia qualcosa nel mondo, voglio essere in grado di monitorare come il robot si sta muovendo, monitorare in modo dinamico
+
+
+
+
+
+
+
+
