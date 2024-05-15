@@ -33,7 +33,16 @@ RUN apt-get update && \
 
 RUN apt-get update && \
     apt-get install -y ros-noetic-tf*
-    
+
+RUN apt-get update && \
+    apt-get install -y ros-noetic-stage* ros-noetic-gmapping ros-noetic-slam-toolbox* ros-noetic-move-base* ros-noetic-amcl ros-noetic-global-planner ros-noetic-dwa-local-planner ros-noetic-navfn
+
+RUN apt-get update && \
+    apt-get install -y  ros-noetic-turtlebot3-* ros-noetic-teleop-twist-keyboard
+
+
+RUN apt-get update && \
+    apt-get install -y ros-noetic-pointcloud-to-laserscan    
 # Switch to the new user
 USER ${USER_NAME}
 

@@ -1,0 +1,56 @@
+
+ha aggiunto nella cartella docker run_docker_pc1.sh e run_docker_pc2.sh per avere 2 ip diversi
+
+Poi mostro l'ip di roscore:
+...
+
+Poi mostro l'ip del device:
+....
+
+Ogni volta che apro un terminale devo scrivere
+    ROS_MASTER...
+    ROS_IP...
+
+
+Facciamo partire la turtle
+
+Guardiamo publisher e subscribers
+
+...
+
+-------------------------------
+Vediamo i Latched publisher (cartella pub_latched)
+
+Se il publisher pubblica ad una low frequency, a volte il subscriber riceve i dati in ritardo
+Come risolvere il problema? incremento la frequency del publisher
+
+Il latched pubblisher pubblica i dati alla sua frequenza, e se c'è un subscriber che vuole i dati, gli manda l'ultima informazione disponibile
+
+...
+
+----------------------------
+Vediamo asynchronous spinner (cartella asynch)
+
+Sono un modo per implementare il multithreading dentro a ros (in c++)
+
+...apriamo i file...
+
+vediamo da terminale che la prima callback sta funzionando a 5hz: cioè alla frequenza più lenta
+Invece la seconda callback funziona più velocemente
+
+------------------------------
+Vediamo i nodelet (sono un argomento complesso) [si usano in computer vision]
+
+...
+il data-transfer tra due nodi nel nodlet avviene non mediante la rosnetwork, ma attraverso una memoria condivisa
+
+I nodelet sono strutturati in modo da avere solo 1 file di codice che implementa delle classi diverse, quindi è fatto per lavorare sulla stessa memoria
+...launchfile
+Nel file abbiamo il producer (che produce data) e il consumer (che consuma i data)
+...
+
+vediamo come comunicano con: rqt_graph
+
+
+
+
