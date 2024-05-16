@@ -1,0 +1,36 @@
+
+Vediamo lo STAGE
+
+per runnarlo si usa rosrun ...ecc vedi slide
+
+...
+
+vediamolo su rviz
+
+cambiamo  il fixed frame in: odom
+
+...
+
+vediamo i topic che stanno runnando: base_laser_link
+
+apro il tf_tree
+
+-------------------------------
+Vediamo il remapping
+
+vedi il launch file gmapping.launch 
+    (nel progetto dovrò fare remapping di tutti i parameters perchè saranno sbagliati)
+
+...
+
+la mappa generata non è perfetta -> probabilmente dovuto a un rotation error
+
+La mappa e odom non sono esattamente allineati perchè quando il robot si muove, viene corretta la posizione
+
+colori:
+-grgio scuro: area che non abbiamo visto
+-nero: ostacolo
+-bianco: area percorribile
+
+Ci possono essere algoritmi che non permettono di attraversare spazi che sono sconosciuti
+
