@@ -1,20 +1,56 @@
 
-....
 
-C'è un modo per salvare la mappa
-...
+we have simluated robot, so we have to start 
+	roscore 
+	cd src/stage
+	rosstage stage_ros stageros maze.world (simulated environement) nvc display a environement
+	
+start building the map
+	roslaunch demo_mapping gmapping.launch
+	rviz
+	edit fov in turtlebot.inc, samples have to be integer, 360*int
+
+    rosrun teleop_twist_keyboard teleop_twist_keyboard.py
+	the robot move in the stage and rviz compose the map
+	
+	we can confront the map build on rviz with the map in which the robot move in stage
+	not crash the wall because odometry work bad after
+
+
+we have a map inside the map topic, but we want to save and use in future
+
+cd src/stage
+mkdir maps
+cd maps
+rosrun map_server map_saver //this command save the map and all the metadata connected
+if we go to folder we have the map and the file with all the parameter
 
 la mappa di default del gmapping è troppo grande, dobbiamo ridurla, abbiamo modificato il file 
 demo_mapping/launch/gmapping.launch
 
+we modify gmapping.launch
+nano gmapping.launch //different from the last lesson, that not have param xmin, ymin, xmax and ymax and set by default param that are bigger
+
+
+this is a old way to create map, there are more new way to map but are more complicated
+
 ...
+
 Launch file per la navigation:
 nav2d_conf/launch/turtlebot_amcl.launch
+
 ...
+
 local planner tiene conto di tutto quello che è vicino
+
+<param name="/use_sim_time" value="true"> //use in our project because we not use real data but data form a bag file
 
 Launch file solo per amcl:
 amcl.launch.xml
+    amcl.launch.xml contain all the default parameters of the launch file 
+	odom_model_type is dif //extremely important to work properly
+	trasnform_tolerance //help the transform to data to map if the device is busy, delta allowed to wait before discarding changes
+
 serve per settare tutti i parametri
 
 ...
@@ -33,12 +69,28 @@ Proviamolo:
 rosrun nav2d_conf turtlebot_amcl.launch
 
 Mostra nella VNC una mappa, so che il robot si trova da qualche parte nella nuvola verde
+    la nuvola è grande perchè amcl è appena stato inizializzato e ha pochi dati per settare la posizone del robot
+
+
 
 Ora voglio mandargli i comandi per muoverlo: premo il tasto "2D NAV Goal" sulla gui e traccio una freccia: poi il robot si muove lì
-...
+
+if we tick map rviz show the border setted in config file on the wall of the map: is more big than the real wall because the config set that the robot cannot be too near the wall to avoid problem on odometry
+
+there are a small debug that show when new goal are added, (if meet something strange?) and when reach goal
+
 amcl deve correggere i dati della odometry: c'è un piccolo errore di overlapping che si vede sulla mappa
 
 Possiamo vedere i bordi degli ostacoli con il tasto Map della gui, e possiamo vedere la pointcloud con il tasto PointCloud2
+
+
+...
+
+is actionlib so we have multple topic in which we can analyze what the robot is doing while we set goal
+
+in feedback topic we have also an id of the goal
+
+rostopic pub move_base/cancel (actionlib_msgs/GoalID "header"?) //it cancel the goal
 
 ...
 
@@ -46,9 +98,12 @@ rostopic list
 ....
 
 
-posso pubblicare .... da command line, per fare dei tests
+posso pubblicare il messaggio del goal da command line, per fare dei tests
 
 Per pubblicare il goal, voglio usare ...??
+
+
+for monitor the robot we not use cmd line to cancel, create and monitor: we have actionlib so we create an actionlib client to monitor the robot
 
 ----------------
 Se non ho la mappa, voglio usare uno slam algorithm
