@@ -1,0 +1,68 @@
+
+....
+
+C'è un modo per salvare la mappa
+...
+
+la mappa di default del gmapping è troppo grande, dobbiamo ridurla, abbiamo modificato il file 
+demo_mapping/launch/gmapping.launch
+
+...
+Launch file per la navigation:
+nav2d_conf/launch/turtlebot_amcl.launch
+...
+local planner tiene conto di tutto quello che è vicino
+
+Launch file solo per amcl:
+amcl.launch.xml
+serve per settare tutti i parametri
+
+...
+costmap_common_params.yaml
+
+global_costmap_params.yaml
+
+local_costmap_params.yaml
+
+Il planner dove dico al robot come deve muoversi:
+dwa_local_planner_params.yaml
+di solito il global planner passa vicino agli obstacles, ma poi interviene il local planner che gli fa fare un giro in modo che sia lontano dall'ostacolo
+
+----------------------
+Proviamolo:
+rosrun nav2d_conf turtlebot_amcl.launch
+
+Mostra nella VNC una mappa, so che il robot si trova da qualche parte nella nuvola verde
+
+Ora voglio mandargli i comandi per muoverlo: premo il tasto "2D NAV Goal" sulla gui e traccio una freccia: poi il robot si muove lì
+...
+amcl deve correggere i dati della odometry: c'è un piccolo errore di overlapping che si vede sulla mappa
+
+Possiamo vedere i bordi degli ostacoli con il tasto Map della gui, e possiamo vedere la pointcloud con il tasto PointCloud2
+
+...
+
+rostopic list
+....
+
+
+posso pubblicare .... da command line, per fare dei tests
+
+Per pubblicare il goal, voglio usare ...??
+
+----------------
+Se non ho la mappa, voglio usare uno slam algorithm
+Uso il gmapping invece di amcl
+
+turtlebot_gmapping.launch
+
+è lento perchè crea la mappa in real-time
+
+----------------
+SLAM toolbox: è un software ....
+
+demo_mapping/mapper_params_online_async.yaml
+
+
+
+
