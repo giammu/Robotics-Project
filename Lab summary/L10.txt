@@ -1,0 +1,46 @@
+
+...comandi iniziali...
+
+-Come settare la mappa con slam_toolbox:
+in rviz faccio: Panels > add new panel > slam_toolbox
+E poi si apre una interfaccia per settare dei data con slam_toolbox
+...
+questo genera map.data e map.posegraph -> sono rappresentazioni più avanzate dell'environment
+
+Slam toolbox si può anche usare dopo per localization e per mapping
+
+---------------------
+Vediamo come si usa per localization
+
+...
+lancio demo_mapping slam_toolbox_localization.launch
+....
+
+-------------------
+Quindi abbiamo 2 modi per buildare la mappa e 2 modi per localization? nella mappa 
+-> nel progetto dobbiamo fare questo ma scegliere quello che performa meglio a seconda di che cosa devo fare
+
+------------------
+SECOND project
+ dati: odometry + pointcloud
+
+ ci fornisce un bag
+ ho 2 topic nel bag
+
+ 1) fare il mapping, con 1 dei 2 metodi (non usare cartography)
+ Scrivere un launchfile
+ Ho bisogno qualcosa che converte da odometry a transform
+
+ 2) devo navigare dentro alla mappa. Usare stage. Usare i dati del robot.
+ Basta mettere i dati corretti del robot
+ Setuppare dei goals
+
+ Scrivere un nodo che permette al robot di muoversi
+
+ Il launchfile è simile al navigation di L9
+
+ Fornire un map folder con la mappa che creo e l'immagine. Se uso slam mettere anche il serialized image
+
+ devo mettere il param del time nel launchfile
+
+ 
