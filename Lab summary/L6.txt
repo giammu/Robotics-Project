@@ -1,85 +1,97 @@
-Inizializiation
+Correzione di alcuni errori comuni nei progetti:
 
 if we put Inizializiation of Transform broadcaster (or parameter or other Inizializiation) in the callback it will be more slow because all the operation needed to create var
 Is useful to inizialize all the variable outside, for avoiding instability during sub and pub message
+-----------------------------
+Message Filters:
 
-Message Filters
+è un tool che si usa per sincronizzare messaggi che arrivano allo stesso momento
 
-si usa per sincronizzare messaggi che arrivano allo stesso momento
+es. ho una stereo-camera che produce due immagini contemporaneamente che devo computare:
+quello che posso fare con le conoscenze pregresse è usare 2 topic, 2 callback, salvo le immagini in variabili globali -> funziona ma è fatto male.
 
-Posso avere una callback per più topic, quando li ricevo allo stesso momento
+Allora è meglio fare così:
+Posso avere una callback (i message filters) che mi permette di avere più di 1 callback allo stesso momento: quindi ho 1 callback per più topic;
+ la callback viene chiamata solo quando li ricevo entrambi e allo stesso momento
 this callback start when all the topic arrived at the same time, if one of them not arrive the callback not start
 
 apri file: message_filters/src/pub.cpp
-in this file we create two message (topic1 and topic2) with the same frequency of pub
+in this file we create two message (topic1 and topic2) with the same frequency 
 we set in the header the actual time (msg1.header.stamp = ros::Time::now()), mandatory for message_filters: if there isn't, message_filters doesn't work
 
 
 apri file: message_filters/src/sub.cpp
-we create the 2 sub (message_filters::subcriber), after we create the TimeSyncronizer with the specification of the message passed
+we create the 2 sub (message_filters::subscriber), after we create the TimeSyncronizer with the specification of the message passed
 and sync with two sub and the size of the buffer (like standard sub) 
-we define sync.registerCallback(boost::bind(&callback, _1,_2)) with place holder for thw two message
+we define sync.registerCallback(boost::bind(&callback, _1,_2)) with place holder for the two message
 
 callback is like normal, but with two definition of message
 
-
 provo ad eseguirlo: 
-rosrun message_filter_example multi_publisher
-rosrun message_filter_example filter_subscriber
+    rosrun message_filters_example multi_publisher
+    rosrun message_filters_example filter_subscriber
 
-=> nothing happen because there are some operation between time::now() fo first message and the second message
+Siccome il subscriber non stampa nulla a schermo, facciamo debugging:
+    rosnode list
+    rosnode info /subcriber
+    rostopic list
+    rostopic echo /topic1
+
+=> nothing happen because there are some operation between time::now() between first message and the second message
 solution is to copy the header, but only for small project and when you can copy the header
+la soluzione di copiare un header non è sempre possibile
 
 (per rientrare in una tmux session: tmux a -t nomesession)
 
-la soluzione di copiare un header non è sempre possibile
 Allora usiamo message_filters/src/sub_pol.cpp
-allow us to sync message that arrive after or before a small interval of time
-how do: we define a sync policy (ApproximateTime) for sync message not a the same time
+allow us to sync message that are close enought, that arrive after or before a small interval of time 
+-> ci pensa ros a definire l'algorutmo con cui viene scelto un delta T accettabile e noi non abbiamo alcun controllo
+how to do it: we define a sync policy (ApproximateTime) for sync message not a the same time
 
-when we create the Synchroizer we pass the policy and other stuff is the same of other pub
+Apri il file:  message_filters/src/sub_pol.cpp
+runnalo con: rosrun message_filters_example filter_subscriber
 
-if we use rosrun message_filter_example filter_subscriber_policy it work with different time:now()
-
-we use the policy with ApproxTime (a lot, like stereo vision or multiple image camera)
+when we create the Synchroizer we pass the policy, and the other stuff that we pass is the same of the other pub
+if we use rosrun message_filter_example filter_subscriber_policy it works also with different time:now()
+(The policy with ApproxTime is used a lot, like stereo vision or multiple image camera)
 
 ---------------------------------------------------------
-ActionLib
+ActionLib:
 
-di solito non servono, però sono usati molto nei grandi rosbag, es. nella navigation
+di solito non servono, però sono usati molto nei grandi rosbag packages, es. nella navigation (tra qualche lezione li usiamo)
 
-Sono una versione avanzata dei services, si usano quando le esecuzioni sono lunghe....
-Action is non blocking like service, so req node not wait 
-we can monitor the status of the action
+Sono una versione avanzata dei services, si usano quando le esecuzioni delle actions sono lunghe
+Il service è bloccante
+Action is non-blocking, they allow me to call the action and keep doing other processes and sometime in the future i will receive the result of the action
+We can monitor the status of the action, and we can also cancel the action.
 Non ci sono scenari dove devo cancellare i services, però le action richiedono tempo, e quindi ha senso cancellarli perchè così non spreco delle risorse
 
-for debug we can use rostopic with standard message: there are ways more advanced but is not necessary
+L'interazione è ancora client-server, e si scambiano messaggi
+for debugging we can subscribe to this information, they are standard message on the ros network: faccio rostopic echo
+there are ways more advanced to debug, but is not necessary:
+ if notihg work we have to watch server and client state machine to check where is the problem (it happen rarerly)
 
-if notihg work we have to watch server and client state machine to check where is the problem (it happen rarerly)
+-------------------
+Esempio di ActionLib: calcolare la sequenza di fibonacci
 
-
-
-...
-
-Esempio: calcolare fibonacci
-Simile ai servizi, ho il folder action
+Similmente ai servizi, ho il folder action
 il file action/fibonacci.action serve per definire input/output del server (goal, result and feedback)
 
-
 apri file: fibonacci/src/fibonacci_server.cpp
-use classes, we call our action in main, we include the lib of action standard for ros and the lib generated by our local action folder
-important inizialize feedback and result as custom message
+Implemented with classes, because it's better
 
+We call our action in main, we include the lib of action standard for ros and the lib generated by our local action folder
+important inizialize feedback and result as custom message
 we set the FibonacciAction like a callback
 the false parameter say that the server not start automatically after the callback but we start it with as.start(), as is the name of the FibonacciAction
-
 in the callback we set the feedback message to update on the process state
 after all the stuff for calcolate fibonacci series, before ever computation we check if the the server ask for number and ros is ok
 if happen, we set server off and success = false
-
 we calculate number of fibonacci serie, we pub it as feedback
-
 if success is true we print output, set server as succesful
+
+Ora vediamo due tipi di client, uno facile e uno più complesso:
+A)Partiamo con il semplice
 
 apri file: fibonacci/src/fibonacci_client.cpp
 
@@ -87,24 +99,21 @@ include the custom action
 Inizialize the node
 create client with the type specification (set true to automatic spin)
 then we wait for server (blocking)
-set the variable and send goal to server
+set the variable and send goal to server.
+Set a bool to check if action ended before timeout:
+-if true: all good and print result
+-if false: print alert and we cancel the goal: mandatory because the elapsed of the time not cancel the goal, so the server still operate to give result
 
-set a bool to check if action ended before timeout
+per runnare server: rosrun actionlib_tutorials fibonacci_server
+per runnare client e settare i parametri: roslaunch actionlib_tutorials launcher.launch
+per vedere i feedback del server: rostopic echo /fibonacci/feedback show us the feedback of the server (list of fibonacci series)
 
-if true: all good and print result
-if false: print alert and we cancel the goal: mandatory because the elapsed of the time not cancel the goal, so the server still operate to give result
-
-rosrun actionlib_tutorial fibonacci_server
-client and set param: roslaunch actionlib_tutorial launcher.launch
-
-rostopic echo /fibonacci/feedback show us the feedback of the server (list of fibonacci series)
-
-if we set duration < order 
+if we set duration time < order 
     if cancelgoal is commented the feeback still go on
     else the feedback stop after pass duration time
 
-più avanzato
-    apri file: fibonacci/src/fibonacci_client2.cpp
+B)più avanzato (sarebbe il modo corretto di usarlo)
+apri file: fibonacci/src/fibonacci_client2.cpp
     most of the code is similar
 
     sendGoal pass also callback for done, active and feedback
@@ -118,9 +127,12 @@ più avanzato
     we use bind to change the callback of timeevent allow pass also the client to stop inside the callback
     => we send cancel goal only if the server is active and there are some pending operation
 
-    rosrun actionlib_tutorial fibonacci_server
-    client and set param: roslaunch actionlib_tutorial launcher2.launch
+per runnare server: rosrun actionlib_tutorial fibonacci_server
+per runnare client and set param: roslaunch actionlib_tutorial launcher2.launch
 
+-----------------------
+Conclusione:
+Le actions ci serviranno nella Navigation, voglio che il mio robot si muova in un certo punto (un goal):
 you send goal (a position in map) and you can monitor how the robot is going during reaching the goal while is moving
 Nella navigation di solito voglio che il mio robot faccia qualcosa nel mondo, voglio essere in grado di monitorare come il robot si sta muovendo, monitorare in modo dinamico
 

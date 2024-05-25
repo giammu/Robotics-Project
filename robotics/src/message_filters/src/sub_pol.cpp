@@ -19,13 +19,16 @@ int main(int argc, char** argv)
 
   message_filters::Subscriber<geometry_msgs::Vector3Stamped> sub1(n, "topic1", 1);
   message_filters::Subscriber<geometry_msgs::Vector3Stamped> sub2(n, "topic2", 1);
-  
+
+  //Posso definire 2 tipi di policy:
+  //1) Exact time è la policy che avevamo già prima
   //typedef message_filters::sync_policies::ExactTime<geometry_msgs::Vector3Stamped, geometry_msgs::Vector3Stamped> MySyncPolicy;
+  //2) Approximate time policy
   typedef message_filters::sync_policies::ApproximateTime<geometry_msgs::Vector3Stamped, geometry_msgs::Vector3Stamped> MySyncPolicy; //questo specifica una policy per sincronizzare i data: possiamo avere Approximate time  o ExactTime: spesso è meglio usare la Approximate time, gli scenari in cui si usa ExactTIme sono pochi: es. due fotocamere
   
-  
-  message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), sub1, sub2); //gli passo la policy e la size del buffer, poi gli passo.....
-  sync.registerCallback(boost::bind(&callback, _1, _2));
+  //Quando creo il synchronizer, gli passo la policy, la size del buffer, poi gli passo i due subscriber
+  message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), sub1, sub2); 
+  sync.registerCallback(boost::bind(&callback, _1, _2)); // chiamo la callback come visto prima
 
   ros::spin();
 
