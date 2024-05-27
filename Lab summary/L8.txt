@@ -1,29 +1,120 @@
+ways to simulate navigation
+    stage is a super simple robot simulator, conf file not have a lot param (no friction, limited noise and sensor)
+    traditionally is used gazibo (friction, more sensor and artificial noise)
+
+joystik pub on topic /joy and is send on the robot to control movement
+if you want to became autonomus, we need to compute a plan (made with planner on /plan topic)
+
+we can use tools inside ros for navigation, ros navigation (stack): is based on actionlib
+
+navigation stack   
+    move_base and nav_core, central component, implement core functionalitiy and connceti differen component, everything is conncetete to nav_core
+    amcl and robot_pose_ekf, node for localization, amcl is particle filter for localization
+    carrot_planner, base_local_planner and dwa_local_planner, are alghoritm to implement local autonomous movement, like trajactory near the robot
+    navfn and global_planner, used to genereate trajectory on large scale
+    move_slow_and_clear, rotate_recovery and clear_costmap_recovery are recovery behavior for critical situation (happens a lot) ways to recover robot are based on cinematics, usally combine them
+    costmap_2d, map_server and voxel_grid, are tools for 2d and 3d env, we use costmap_2d for show map, for some specific scenario we use map_server because costmap_2d not work
+     
+move_base
+    input: goal is the final positon, publish like a single point via topic or action
+    output: cmd_vel message, return the velocity and the orientation
+
+nav_core
+    input: simple point goal
+    output: cmd_vel
+    plugins implement variuos functionality, they can change
+    info about map are provided by the map server and sensor
+
+the robot can be conviced about obstacles not exist -> solution is clear the map and restart
+
+cost map
+    input: 2d lidar
+    there are starting map, we already the map of the env: map doesn't change
+    if we have moving obstacle will be dected run time with lidar and go in local costmap (show only map near the obstacle)
+    each cell on map have 255 different cost value, divided on 3 type
+        254, 255 range where robot collide
+        252 to 128 range where the robot can collide
+        127 to 1 range where the robot not collide
+    global costmap, used for long-term plans, not change
+    local costmap, used for avoid obstacle, can change
+
+    link between move bas eand server map is n example of latching message, we pub at the start the map and after every move move_pose receive the same map
+
+in ros map are repesent with image and yaml file whcih describe map metadata
+
+amcl
+    is a probablisti localization suystem based on 2d map, required a laser scan and is better if we use odometry
+    transform laser scan in odom
+    estimate position of the robot
+    pub the transform between global frame and odom frame
+
+when write this component is important to write it like in the standard ways
+
+ros navigation is better with differential or holomic robot, require a planar laser for scan and loclaziate. Have best results in square or circular robot
+
+gmapping
+    sudo apt install ros-noetic-gmapping
+    standard ros package for navigation
+    Slam algoritm
+
+    requirement: odometry, horizontal, fixed, laser range-field and base to laser transformation and base to odom transformation
+    important parameters
+        base_frame, frame attacched to mobile phase
+        map_frame, frame attached to the map
+        odom_frame, frame attached to odom system
+        scan, laser scan to create the map from
+        map, get map data from topic
+        different ways to use:
+            drive you robot
+            save everitying in a bag
+            run the bag
+            start gmapping, chrunck data
+            save generated map
 
 Vediamo lo STAGE
 
-per runnarlo si usa rosrun ...ecc vedi slide
+if we want to control the robot we need is as a ROS node
+    start docker
+    start vnc
+    catkin_make
+    roscore
+    rosrun stage_rs_stagerois maze.world
 
-...
+vediamolo su rviz   
+    we can see our world and our robot
+    if we wnat to see data: view->data see different point of laserscanner
 
-vediamolo su rviz
+for move the robot
+    rosrun teleop_twist_keyboard teleop_twist_keyboard.py //way to control robot
+    we move terminal near vnc window and we can move robot inside the map
 
-cambiamo  il fixed frame in: odom
+open rviz
+    change view to topdownorto (2d visual)
+    cambiamo  il fixed frame in: odom 
+    add tf
 
-...
+vediamo i topic che stanno runnando
+    base_scan, if we look in base_scan header we have base_scan_link
+    
 
-vediamo i topic che stanno runnando: base_laser_link
-
-apro il tf_tree
+open the tf_tree and we see that evertying is like we wanted
+if our tree is diffent from this probably is why things doesn't work
+the ampping expected sensor message topic scan --> need remapping from base sca to scan
 
 -------------------------------
 Vediamo il remapping
 
+cd demo_mapping
+
 vedi il launch file gmapping.launch 
-    (nel progetto dovrò fare remapping di tutti i parameters perchè saranno sbagliati)
+    nel progetto dovrò fare remapping di tutti i parameters perchè saranno sbagliati, all parameter have wrong name
+    we remap scan to base scan
 
-...
+roslaunch demo_mapping gmapping.launch
+add map and add laserScan by topic in rviz, we notice that the only obstacle are what the laserscan detected 
+if we move the robot the map update: the map update low because there are no resources to move robot and use gmapping at the same freq
 
-la mappa generata non è perfetta -> probabilmente dovuto a un rotation error
+la mappa generata non è perfetta -> probabilmente dovuto a un rotation error, but the robot is able to navigate correctly
 
 La mappa e odom non sono esattamente allineati perchè quando il robot si muove, viene corretta la posizione
 
