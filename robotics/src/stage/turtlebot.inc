@@ -30,5 +30,5 @@ define turtlebot position
   drive "diff"
   color "grey"
   
-  kinect()
+  kinect() #integro il sensore dentro il robot
 )
