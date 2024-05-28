@@ -1,4 +1,5 @@
 robotics/src/bags/robotics.bag 
+robotics/src/bags/robotics2.bag 
 build/
 .vscode/settings.json
 comandi.sh
