@@ -18,8 +18,9 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "talker_subscribers_asynch");
     ros::NodeHandle nh;
     
-    ros::AsyncSpinner spinner(0); // num of thread      //creo l'oggetto asynchronous spinner
+    ros::AsyncSpinner spinner(0); // num of thread      //creo l'oggetto asynchronous spinner: 0 serve per permettere al sistema di runnare il massimo numero possibile di thread (senza fare overload del sistema)
     spinner.start();    //chiamo start sullo spinner
+    //questi due sono gli unici cambiamenti che devo fare dentro al codice
     
     ros::Subscriber counter1_sub = nh.subscribe("talker1", 1, callbackTalker1); //le callback hanno una sintassi identica a prima, semplicemente avviando lo asyncspinner, le callback vengono eseguite come multithread
     ros::Subscriber counter2_sub = nh.subscribe("talker2", 1, callbackTalker2);

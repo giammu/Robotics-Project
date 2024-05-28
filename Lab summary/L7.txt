@@ -1,39 +1,46 @@
+Oggi vediamo i components: non sono molto utili per il progetto, ma sono utili nel mondo del lavoro
+------------
+Ros on multiple Machines:
 
-ha aggiunto nella cartella docker run_docker_pc1.sh e run_docker_pc2.sh per avere 2 ip diversi
+is common that robot is build of different machine (for dividing computational power) or we run robot on one device and monitor what is happening with other device
+ros give the opportunity to connect multiple device but is not the default, it needs to be implemented 
 
-is common that robot is build in different machine or we run robot on one device and monitor what is happening on other device
-ros give the opportunity to connect multiple device but is not default, need to be implemented
+A)Primo topic: IP address
 
-how get ip: "ifconfig command" -> "inet addr" 
+how get my ip: "ifconfig command"-> "inet addr" 
 
-if you have to conf var is more easy to set var in .bashrc file to not setup every time all variable
+if you have to configure variables for a distribured system is more easy to set them in .bashrc file to allow communication between all devices
 
-we set the master_ip
-    export ROS_MASTER_URI=http://master_ip:11311
-    we have only one master that manage the connection of all the network ros and we have to comunicate to all the device linked
+we set the master_ip 
+    export ROS_MASTER_URI=http://master_ip:11311        (dove master_ip = il mio ip, il master è chi pubblica le informazioni)
+    in each device we have to specify one master that manage the connection of all the ros-network devices 
 
-Then tell to ros my master_ip
-    export ROS_IP=master_ip, if not setup master cannot send topic to other device
+Then tell to ros master my ip
+    export ROS_IP=master_ip,     if it's not setup the master cannot send the topic to other device
 
-for the client conf
-    export ROS_MASTER_URI=http://master_ip:11311
-    export ROS_IP=my_ip
-
-roscore run only in the master 
+roscore run only in the master
 
 to check if all work call "rostopic list" on a device without run roscore
     if you see topic ROS network is well connected
 
+B)Secondo topic: Time Synchronization
+
+Le macchine hanno clock diversi e c'è sempre qualche piccolo delay di qualche millisecondo -> non ci interessa nel setup, ma
+nella parte di navigation il TF può dare errori con dati troppo vecchi o dati che vengono dal futuro
+
 some bags required the exact timestamp on all device (ex navigation) so it is needed to sync clock of all device
 there are a lot of ways
     standard is use ntp server on the master and chrony client for all device
-    other is install NTP server on the server and chrony all client, using conf file for master and client and get clok info from a specific file
+    another setup is to install NTP server on the server and chrony all client, using conf file for master and client and get clok info from a specific file
+-------
+Proviamo a testarlo:
 
-to test on one device we use docker
+(ha aggiunto nella cartella docker run_docker_pc1.sh e run_docker_pc2.sh per avere 2 ip diversi)
+to test this on one device we use docker, facciamo partire i due containers:
     ./run_docker_pc1.sh
-    ./run_docker_pc2.sh
+    ./run_docker_pc2.sh    (questo lo faccio in un altro terminale)
     if we use "docker_ps" we notice the two container running
-    "ifconfig" show ip of pc1 and pc2
+    the command "ifconfig" show the ip of local host and the virtual interface
 
 setup ros network
     pc1
@@ -41,102 +48,115 @@ setup ros network
         export ROS_IP=ip_pc_1
         roscore
     pc2
-        export ROS_MASTER_URI=http://ip_pc_1:11311
+        export ROS_MASTER_URI=http://ip_pc_1:11311  (è lo stesso comando di prima perchè abbiamo 1 solo rosmaster)
         export ROS_IP=ip_pc_2
         "rostopic list" show the topic in the master
 
-run "/.run_vnc"
-if we open other terminal, we have to exoprt master_ip and local_ip
+run "./run_vnc" in un 3° terminale
+(if we open other terminal, we always have to export master_ip and local_ip)
 
-pc1
+nel terminale di pc1
     rosrun turtlesim turtlesim_node
 
-pc2
+nel terminale di pc2
     rosrun turtlesim turtle_teleop_key
 
 on the vnc we can move our turtle with arrow keys 
 
-/turtle1/cmd_vel is running on the second device
+the topic /turtle1/cmd_vel is running on the second device but we receive it on the first device
 on pc1 we can run "rostopic info /turtle1/cmd_vel" we can see that pub and sub is on different ip
 
-extremely useful when work on distributed system: not in our project but standard 
+extremely useful when work on distributed system: not in our project but it's the standard 
 
 exit on run_docker_pc1 and start normal container ./run_docker_vnc
 -------------------------------
-Latched publisher (cartella pub_latched)
+Latched publisher (cartella pub_latched)  
 
-not so many scenarios how to use, but very useful in that case
+There aren't not so many scenarios where to use it, but it's very useful in specific cases
+
+apri file pub_latched/src/pub
 
 Se il publisher pubblica ad una low frequency, a volte il subscriber riceve i dati in ritardo
-recive data after some time sometime is no good 
-Come risolvere il problema? incremento la frequency del publisher => non molto efficiente, per questo si usano i latched publisher
+recive data after some time sometime is not good 
+Come risolvere il problema? Potrei incrementare la frequency del publisher => non molto efficiente, per questo si usano i latched publisher:
 
-Il latched pubblisher pubblica i dati alla sua frequenza, e se c'è un subscriber che vuole i dati, gli manda l'ultima informazione disponibile
+Il latched pubblisher pubblica i dati alla sua frequenza standard, e se c'è un subscriber che parte e che vuole i dati, gli manda l'ultima informazione disponibile
 the code is similiar of the normal pub but we add true after the size of buffer (line 12 of pub.cpp)
 
 launcher.launch contain the correct syntax of the tf2 that use latched and not high freq pub
 
-try it 
+let's try it:
     roscore
-    rosrun pub_latched pub_latched (pub at low freq)
-    rostopic list (notice /chatter)
-    rostopic echo /chatter (we receive back the info every time we subscribe to the topic)
+    rosrun pub_latched pub_latched (facciamo partire il pub at low freq)
+    rostopic list ( vogliamo vedere il topic /chatter)
+    rostopic echo /chatter (we receive back the info every time we subscribe to the topic, anche se non è stata pubblicata in quel momento)
     
     roslaunch pub_latched launcher.launch
-    rostopiclist (notice /tf_static, useful to have different topic for tf static and other for tf who move)
-    rostopic echo /tf_static (pub only once, we can see when we want because of latched_message)
-
+    rostopic list (vediamo /tf_static perchè il tf pubblicato non è standard ma è static e quindi non cambia -> useful to have different topic for tf [static and other for who move])
+    rostopic echo /tf_static (published only once, we can see the data when we want because it's a latched_message)
 
 ----------------------------
 Vediamo asynchronous spinner (cartella asynch)
 
-Sono un modo per implementare il multithreading dentro a ros (in c++)
+Sono un modo per implementare il multithreading dentro a rosnode (solo in c++)
+Sono utili in caso di multiple callbacks, perchè il mio nodo le gestisce 1 alla volta
 
-if you need more time to proces data arrived by a message rather than the frq of arrive of message, you lose the following message
-
-we solve with multithreading, one thread for each one
-thread can be access with multithreading or with a ros implementation
+if you need more time to process the data arrived by a message rather than the frequency of arrival of messages, you lose the next message
+Vogliamo che il nodo che controlla il robot runni a 200hz (alta frequenza)
+we solve it with multithreading, one thread for each one
+ros implementa queste funzionalità direttamente dentro a ros senza dover scrivere codice low-level
 
 specific for c++, because instruction are sequentially (in python is by default multithreading, so need to implement mutex)
 
-in pub.ccp we pub on two topic (chatter1 and chatter2)
-in standard_sub.cpp we create two sub (for every pub) and set artificial delay for simulating processing data
-in asynch_sub we solve message lost by delay adding two line before definition of subscribers
+apri file asynch/src/pub
+    in pub.ccp è uno standard publisher che pubblica on two topic (talker1 and talker2)
+
+apri file asynch/src/standard_sub
+    in standard_sub.cpp we create two sub (for every pub) and set artificial delay for simulating processing data
+
+apri file asynch/src/asynch_sub
+    in asynch_sub we solve message lost by delay adding two line before definition of subscribers
     AsyncSpinner spinner (0)
     spinner.start()
 
 try it
     roscore
-    rosrun sub_async stantard_pub
-    rosrun sub_async standard_sub: we receive callback1, callback2 and we notice that all message are recived at 0.5 freq, we are lose a lot of callback2
-    rosrun sub_async asynch_sub: we receive data at the correct time, we print at 0.5 freq (calback1) and 3 freq (callback2) without losing message
-
+    rosrun sub_asynch standard_pub
+    rosrun sub_asynch standard_sub: we execute callback1, callback2 and we notice that they are both running 0.5hz (hanno tutti un delay di 2 secondi) -> which means that we are losing a lot of data
+    rosrun sub_asynch asynch_sub: we receive data at the correct time, we print at 0.5hz (callback1) and 3hz (callback2) [stiamo ancora perdendo dati sulla prima callback ma non ci possiamo fare nienete]
+ 
+ in questo scenario non avevamo data condivisi tra le callback, se ci fossero allora ci sarebbero dei problemi -> bisogna implementare dei mutex
 ------------------------------
-Vediamo i nodelet (sono un argomento complesso) [si usano in computer vision]
+Vediamo i nodelet (sono un argomento complesso che probabilmente non useremo mai) [si usano in computer vision]
 
-we not see specific code, we only understand what are and why use
-
-it is used for big data, like img from stereo camera and have to compute visual odometry
+We don't see specific code, we only understand what they are and why we use them.
+It is used for big data, like images from stereo-camera and have to compute visual odometry
 if you pub raw image on rosnetwork you display big data, so we cast & compress
-for some reason, like in computer vision, raw data are mandatory => big data on the network
+for some reason, like in computer vision, raw data are mandatory => big data on the network]
 
 if we pub ros netowrk can be super flooded and recive the info at low freq 
 
-is not a good practice to have only one node that make all: there are multiple node one for every task
-but how we transfer data on the node? (not pub because we not solve problem)
-if node run on one device we can use nodelet, that allow running more node on the same file and not use ros network but shared memory on the device
+is not a good practice to have only one node that make all computation: there are multiple node one for every task. (è meglio averli tutti sullo stesso device)
+Issue: but how we transfer data from the node that is acquiring the data and the node that is processing the data? (we cannot publish on the network because we flood the network) Allora usiamo i nodelet
+if node run nodes on different devices, we can use the ros network.
+If i run them on the same device, i can use Nodelets: which allow to run multiple nodes inside the same code and provides shared memory (in ros2 si possono usare i nodelets anche sulla rete tcp/ip)
 
-I nodelet sono strutturati in modo da avere solo 1 file di codice che implementa delle classi diverse, quindi è fatto per lavorare sulla stessa memoria
 
-if you work with nodelet you use also an xml file that contain the definition of different node, class and give info about system
+apri file: nodelet_example/src/nodelets
+    I nodelet sono strutturati in modo da avere solo 1 file di codice che implementa delle classi diverse, quindi è fatto per lavorare sulla stessa memoria
+    contiene dei producer nodelets e dei consumer nodelets
 
-to start nodelet you have tos start nodelet_manager
-the nodelet are generate as plugin, so there are different way to start it
-    start nodelet node inside the nodelet package
-    put as argument the name of the custom nodelet that we create
+file xml: nodelet_plugin.xml
+    if you work with nodelet you use also an xml file that contain the definition of different node, class and give info about system
+
+launch file: launch.launch
+    to start nodelet you have tos start nodelet_manager
+    the nodelet are generate as plugin, so there is a different way to start it
+        start nodelet node inside the nodelet package
+        put as argument the name of the custom nodelet that we create
 
 try it
-    roslaunch nodlet_example launch.launch (start consumer node and producer node)
+    roslaunch nodelet_example launch.launch (start consumer node and producer node)
     rostopic list (we still have output_topic)
 
 we use rqt_graph to see how the nodelet comunicate with the related topic

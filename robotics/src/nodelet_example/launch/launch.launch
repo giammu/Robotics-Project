@@ -1,7 +1,8 @@
 <launch>
-  <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager"/>
+  <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager"/> <!--to start nodelet you have tos start nodelet_manager: gestisce tutti i nodelet-->
 
-  <node pkg="nodelet" type="nodelet" name="producer" output="screen" args="load nodelet_example::ProducerNodelet nodelet_manager"/> <!-- -->
+  <node pkg="nodelet" type="nodelet" name="producer" output="screen" args="load nodelet_example::ProducerNodelet nodelet_manager"/> <!--specifico negli arguments il custom nodelet che voglio creare-->
   <node pkg="nodelet" type="nodelet" name="consumer" output="screen" args="load nodelet_example::ConsumerNodelet nodelet_manager"/>
 </launch>
 
+ 
