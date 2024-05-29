@@ -107,7 +107,7 @@ Vediamo il remapping
 cd demo_mapping
 
 vedi il launch file gmapping.launch 
-    nel progetto dovrò fare remapping di tutti i parameters perchè saranno sbagliati, all parameter have wrong name
+    nel progetto dovrò fare remapping di tutti i parameters perchè saranno sbagliati
     we remap scan to base scan
 
 roslaunch demo_mapping gmapping.launch
