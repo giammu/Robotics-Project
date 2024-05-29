@@ -1,3 +1,7 @@
+<!-- Questa è già la versione nuova di tf: tf2, e questa è la nuova sintassi-->
 <launch>
-  <node pkg="tf2_ros" type="static_transform_publisher" name="example_tf" args="1 1 1 0 0 0 1 odom base_link" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="example_tf" args="1 1 1 0 0 0 1 odom base_link" /> <!--non serve più sccrivere la running frequency perchè sto usando un latched publisher-->
 </launch>
+
+<!--se osservo il tf2, noto che l'informazine viene pubblicata solo una volta all'inizio-->
+<!--anche nei recorded bag gli static tf vengono pubblicati solo all'inizio-->

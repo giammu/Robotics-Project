@@ -9,7 +9,7 @@ int main(int argc, char **argv){
 	ros::init(argc, argv, "talker");
 	ros::NodeHandle n;
 
-	ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter",  1, true); //questo è il classico publisher
+	ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter",  1, true); //il codice è come il classico publisher, l'unica differenza è che aggiungo true: significa che pubblica latched message
 
 	ros::Rate loop_rate(0.05);
 
