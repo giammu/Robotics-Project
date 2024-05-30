@@ -1,4 +1,4 @@
-# questo file definisce le caratteristiche della mappa
+# questo file definisce le caratteristiche dell'environment in cui navigo
 
 include "turtlebot.inc"
 

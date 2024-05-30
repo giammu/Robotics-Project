@@ -1,105 +1,150 @@
-ways to simulate navigation
-    stage is a super simple robot simulator, conf file not have a lot param (no friction, limited noise and sensor)
-    traditionally is used gazibo (friction, more sensor and artificial noise)
+Oggi vediamo teoria su Robot Navigation:
+    -come configurare tutto dentro a ros per poter fare navigation (libraries and components)
+e vediamo la mappa:
+    -come crearla -> abbiamo bisogno di un robot per testarla -> usiamo il robot simulator nella cartella "stage"
+    ways to simulate navigation:
+        stage is a super simple robot simulator, conf file not have a lot param (no friction, limited noise and sensor)
+        traditionally is used gazibo (friction, more sensor and artificial noise)
 
-joystik pub on topic /joy and is send on the robot to control movement
-if you want to became autonomus, we need to compute a plan (made with planner on /plan topic)
-
-we can use tools inside ros for navigation, ros navigation (stack): is based on actionlib
+Non sarebbe più semplice usare un joypad per comandare il robot? (Vedi schema slide)
+    joypad pub on topic /joy and is send on the robot to control movement
+If you want the robot to become autonomus, we need to add some nodes and compute a plan (made with planner on /plan topic)
+------------------------------
+Parte 1)
+we can use tools inside ros for navigation -> so we don't need to implement them from scratch;
+ros navigation (stack): is sufficient to provide some functiionalities, is based on actionlib
 
 navigation stack   
-    move_base and nav_core, central component, implement core functionalitiy and connceti differen component, everything is conncetete to nav_core
-    amcl and robot_pose_ekf, node for localization, amcl is particle filter for localization
-    carrot_planner, base_local_planner and dwa_local_planner, are alghoritm to implement local autonomous movement, like trajactory near the robot
-    navfn and global_planner, used to genereate trajectory on large scale
-    move_slow_and_clear, rotate_recovery and clear_costmap_recovery are recovery behavior for critical situation (happens a lot) ways to recover robot are based on cinematics, usally combine them
-    costmap_2d, map_server and voxel_grid, are tools for 2d and 3d env, we use costmap_2d for show map, for some specific scenario we use map_server because costmap_2d not work
-     
-move_base
-    input: goal is the final positon, publish like a single point via topic or action
-    output: cmd_vel message, return the velocity and the orientation
+    move_base and nav_core: are the central component, implement the core functionalities = connect the different components to perform navigation, everything is connected to move_base
+    amcl and robot_pose_ekf: node for localization, amcl is particle filter for localization-> it works with lidarr, and is also used to correct odometry drift. robot_pose_ekf implements kalmann filter and produce an estimate of the pose
+    carrot_planner, base_local_planner and dwa_local_planner: given the trajectory i know where you are, are alghoritm to implement local autonomous movement
+    navfn and global_planner: used to genereate trajectory from my position to the global goal
+    move_slow_and_clear, rotate_recovery and clear_costmap_recovery: are recovery behavior for critical situation where the robot is not able to move (happens a lot), they depend on the kinematic and shape of the robot; we usally combine different behaviours to recover the robot
+    costmap_2d, map_server and voxel_grid: are tools for 2d representation of the surroundings of the robot, map_server prende in input la mappa e la pubblica, we use costmap_2d for representing the environment, for some specific scenario in which costmap_2d doesn't work e quindi si usa voxel_grid
+    fake_localization and move_base_msgs: sono utilities usate per il testing
 
-nav_core
+move_base
+    input: goal is the final positon, it can be done by sending an action (with action_lib) which contains the final goal. why use action? because allow to monitor the state of the action (i can see if the robot is moving, is computing the trajectory), the action can return errors, and i can cancel the action
+    output: cmd_vel message, return the speed and the heading
+    plugins that can be changed at runtime: global_planner, recovery_behaviours, local_planner
+
+[nav_core
     input: simple point goal
     output: cmd_vel
     plugins implement variuos functionality, they can change
-    info about map are provided by the map server and sensor
+    info about map are provided by the map server and sensor ]
 
+Perchè il robot si inchioda? Lo standard scenario è che si sta muovendo, la odometry drifta di 10-20 cm nell'area in cui si trova il robot -> il robot è convinto che ci sono ostacoli davanti a lui
+Come risolverlo? Cancello gli ostacoli nella mappa -> il robot si può muovere -> mi muovo e identifico gli obstacles
 the robot can be conviced about obstacles not exist -> solution is clear the map and restart
+
+Le informazioni su ostacoli e surroundings del robot sono gestiti da global_costmap e local_costmap:
+
 
 cost map
     input: 2d lidar
-    there are starting map, we already the map of the env: map doesn't change
-    if we have moving obstacle will be dected run time with lidar and go in local costmap (show only map near the obstacle)
+    -global_costmap=tutta l'area, viene già fornita all'inizio, contiene tutti gli static obstacles
+        there are starting map, we already the map of the env: map doesn't change
+    -local_costmap=piccola mappa che contiene gli ostacoli che circondano il robot
+        if we have moving obstacle will be dected run time with lidar and go in local costmap (show only map near the obstacle)
+    
     each cell on map have 255 different cost value, divided on 3 type
         254, 255 range where robot collide
         252 to 128 range where the robot can collide
-        127 to 1 range where the robot not collide
-    global costmap, used for long-term plans, not change
+        127 to 1 range where the robot does not collide
+    global costmap, used for long-term plans, does not change
     local costmap, used for avoid obstacle, can change
 
-    link between move bas eand server map is n example of latching message, we pub at the start the map and after every move move_pose receive the same map
+map_server
+    il suo goal è pubblicare la mappa
+    la global costmap viene pubblicata 1 sola volta, è un esempio di latching message: we pub at the start the map and after every move move_pose receive the same map
+    in ros map are represented with image (PNG or PGM), every pixel represent a distance, it's specified in the yaml file which describe map metadata
+    ->Posso prendere la mappa, aprirla con paint e modificarla per pulirla, oppure posso direttamente creare la mappa con paint
 
-in ros map are repesent with image and yaml file whcih describe map metadata
+    yaml file:
+    -specifico il nome del file
+    -la resolution: cioè quanti metri è un pixel
+    -origine della mappa (dove il robot parte)
+    -negate: give opposite values for occupied and free area
+    -threshold: serve per definire l'area occupata e quella libera
+
+ora devo localizzare il robot sulla mappa, il robot ha encoders sulle ruote -> ho una stima di dove si trova -> però l'odemetry con il tempo drifta
+-> serve un modo per correggere il drift:
 
 amcl
-    is a probablisti localization suystem based on 2d map, required a laser scan and is better if we use odometry
-    transform laser scan in odom
-    estimate position of the robot
-    pub the transform between global frame and odom frame
+    is a probablistic localization system based on 2d map, requires as input the laser scan (i don't need to put a laser on the robot), and provide better result if we use odometry
+    /base_frame è la posizione del robot, /odom_frame è la starting position del robot.
+    Amcl trasforma /base_frame in /map_frame: stima la correct position del robot
+    Per correggere il drift dell'odometry, pubblica un nuovo tf tra /odom_frame e /map_frame.
+        Requirements:
+        transform laser scan in odom
+        estimate position of the robot
+        pub the transform between global frame and odom frame
+    (vedi configuration file con i parameters nelle slide)
+    
+    Cosa manca?  Sensor sources: LaserScan; Base controller: Twist; Transformation of different elements; Odometry source
 
-when write this component is important to write it like in the standard ways
+    when write this component is important to follow the standard of ros (vedi immagine slide)
 
-ros navigation is better with differential or holomic robot, require a planar laser for scan and loclaziate. Have best results in square or circular robot
+--------------------------------------
+Parte 2) Come possiamo creare la mappa per fare autonomous navigation?
 
-gmapping
-    sudo apt install ros-noetic-gmapping
-    standard ros package for navigation
-    Slam algoritm
+gmapping   
+    it's the standard ros package for map creation in ros, è il migliore che possiamo usare.
+    è un Slam algorithm, è basato su laser e odometry
 
-    requirement: odometry, horizontal, fixed, laser range-field and base to laser transformation and base to odom transformation
+    requirements: odometry, horizontal, fixed, laser range-field and base to laser transformation and base to odom transformation
     important parameters
+        I nomi dei sensori nel bag file non sono standard, nel progetto devo rimapparli
         base_frame, frame attacched to mobile phase
         map_frame, frame attached to the map
         odom_frame, frame attached to odom system
-        scan, laser scan to create the map from
+        scan, laser scan to create the map from this topic
         map, get map data from topic
-        different ways to use:
-            drive you robot
-            save everitying in a bag
-            run the bag
-            start gmapping, chrunck data
-            save generated map
+    How to use it? different ways to use it:
+        drive your robot
+        save everything in a bag
+        run the bag
+        start gmapping, crunch data
+        save generated map
 
-Vediamo lo STAGE
+Vediamo STAGE: lo utilizziamo per creare i test su autonomouos robot navigation
+    il file maze.world definisce l'environment
+    per runnarlo: rosrun stage_ros stageros maze.world
+
+    apri file: stage/maze.world
+    apri file: turtlebot.inc
 
 if we want to control the robot we need is as a ROS node
     start docker
     start vnc
     catkin_make
     roscore
-    rosrun stage_rs_stagerois maze.world
+    cd src/stage/
+    rosrun stage_ros stageros maze.world
 
-vediamolo su rviz   
+vediamolo su vnc   
     we can see our world and our robot
-    if we wnat to see data: view->data see different point of laserscanner
+    nella GUI: if we want to see data: view->data see different point of laserscanner
 
-for move the robot
+for moving the robot with the terminal:
     rosrun teleop_twist_keyboard teleop_twist_keyboard.py //way to control robot
-    we move terminal near vnc window and we can move robot inside the map
+    (we move terminal near vnc window and we can move robot inside the map)
 
 open rviz
-    change view to topdownorto (2d visual)
-    cambiamo  il fixed frame in: odom 
-    add tf
+    change view to topdownorto (2d visual) [si setta in alto a destra]
+    cambiamo  il fixed frame in: odom [si setta in alto a sinistra nella GUI]
+    add > tf
+Abbiamo una trasformazione tra la posizione iniziale del robot e tutti i diversi components del robot
 
 vediamo i topic che stanno runnando
-    base_scan, if we look in base_scan header we have base_scan_link
-    
+    rostopic list
+    base_scan -> sono i base_scan data;
+        rostopic echo base_scan/header -> if we look in base_scan header we have base_laser_link -> quindi è richiesto un tf tra base_laser_link e odom
+        rosrun rqt_tf_tree rqt_tf_tree -> open the tf_tree and we see that evertying is like we wanted -> nel progetto è importante controllare che il tf tree sia come questo: odom->base_footprint->base_link->base_laser_link
 
-open the tf_tree and we see that evertying is like we wanted
 if our tree is diffent from this probably is why things doesn't work
-the ampping expected sensor message topic scan --> need remapping from base sca to scan
+the mapping expected sensor message topic scan --> need remapping from base sca to scan
 
 -------------------------------
 Vediamo il remapping
@@ -111,12 +156,17 @@ vedi il launch file gmapping.launch
     we remap scan to base scan
 
 roslaunch demo_mapping gmapping.launch
-add map and add laserScan by topic in rviz, we notice that the only obstacle are what the laserscan detected 
-if we move the robot the map update: the map update low because there are no resources to move robot and use gmapping at the same freq
+
+nella gui in rviz: add > by topic > map, and add > by topic > laserScan,
+    we drive the robot and we notice that the only obstacle are what the laserscan detected 
+    if we move the robot the map update: the gmapping update with low frequency because there are no resources to move robot and use gmapping at the same freq
 
 la mappa generata non è perfetta -> probabilmente dovuto a un rotation error, but the robot is able to navigate correctly
+                                -> c'è un drift nella odometry
 
-La mappa e odom non sono esattamente allineati perchè quando il robot si muove, viene corretta la posizione
+Notiamo nel TF che la map e odom non sono esattamente allineati perchè quando il robot si muove, viene corretta la posizione
+ 
+possiamo correggere la mappa in post processing su paint
 
 colori:
 -grgio scuro: area che non abbiamo visto

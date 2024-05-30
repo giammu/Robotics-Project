@@ -1,13 +1,13 @@
-# in questo file definisco le caratteristiche dei sensori, e quelle del robot
+# in questo file definisco le caratteristiche del robot: in particolare i sensori
 
 define kinect ranger
 (
   sensor
   (
-    pose [ -0.1 0.0 -0.11 0.0 ]
+    pose [ -0.1 0.0 -0.11 0.0 ]           
     size [0.1 0.1 0.1 ]
     range  [0 6.5]
-    fov 120.0
+    fov 120.0                              #qua definiamo le caratteristiche del laserscanner
     samples 640
   )
   # generic model properties
@@ -17,18 +17,18 @@ define kinect ranger
 
 define turtlebot position
 (
-  pose [ 0.0 0.0 0.0 0.0 ]
+  pose [ 0.0 0.0 0.0 0.0 ]                #dove inizia il robot
   
-  localization "odom"
+  localization "odom"                     #tipologia di 
 
 
-  odom_error [0.2 0.2 0.0 0.3 ] # questi sono i parameters che generano la gaussian noise
+  odom_error [0.2 0.2 0.0 0.3 ]                       #questi sono i parameters che generano la gaussian noise con la varianza (l'errore)
 
-  size [ 0.2552 0.2552 0.40 ]
+  size [ 0.2552 0.2552 0.40 ]                  #dimensione del robot
   origin [ 0.0 0.0 0.0 0.0 ]
   gui_nose 1
-  drive "diff"
+  drive "diff"                      #tipologia di robot: differential drive
   color "grey"
   
-  kinect() #integro il sensore dentro il robot
+  kinect()                           #integro il sensore dentro il robot
 )
