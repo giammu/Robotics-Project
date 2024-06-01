@@ -1,11 +1,11 @@
 local_costmap:
-   global_frame: odom
+   global_frame: odom    #cambio il global frame: perchè faccio muovere il robot, che costruisce la local costmap fissata attorno alla posizione del robot, che è odom
    robot_base_frame: base_footprint
    update_frequency: 5.0
    publish_frequency: 2.0
-   static_map: false
-   rolling_window: true
-   width: 6.0
+   static_map: false  #perchè la costruisco dinamicamente con gli scan data
+   rolling_window: true #perchè si muove in giro, si aggiorna mentre il robot va in giro
+   width: 6.0  #specifico la dimensione della mappa, è un trade-off: non la voglio troppo grande (perchè pesa) e non troppo piccola perchè altrimenti non vedo gli obstacles
    height: 6.0
    resolution: 0.05
    transform_tolerance: 0.5 #maximum amount of latency allowed between tf

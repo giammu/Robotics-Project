@@ -1,21 +1,21 @@
 DWAPlannerROS:
 
 # Robot Configuration Parameters - Kobuki
-  max_vel_x: 0.5  # 0.55
+  max_vel_x: 0.5  # 0.55                         #velocità del robot x: voglio che vada solo avanti 
   min_vel_x: 0.0 
 
-  max_vel_y: 0.0  # diff drive robot
+  max_vel_y: 0.0  # diff drive robot             #non voglio che si muova lateralmente
   min_vel_y: 0.0  # diff drive robot
 
   max_trans_vel: 0.4 # choose slightly less than the base's capability
-  min_trans_vel: 0.1  # this is the min trans velocity when there is negligible rotational velocity
+  min_trans_vel: 0.1  # this is the min trans velocity when there is negligible rotational velocity     #non mettere 0 qui
   trans_stopped_vel: 0.1
 
   # Warning!
   #   do not set min_trans_vel to 0.0 otherwise dwa will always think translational velocities
   #   are non-negligible and small in place rotational velocities will be created.
 
-  max_rot_vel: 3.0  # choose slightly less than the base's capability
+  max_rot_vel: 3.0  # choose slightly less than the base's capability                            #velocità di rotazione
   min_rot_vel: 0.4  # this is the min angular velocity when there is negligible translational velocity
   rot_stopped_vel: 0.4
   
@@ -27,7 +27,7 @@ DWAPlannerROS:
   yaw_goal_tolerance: 0.3  # 0.05
   xy_goal_tolerance: 0.10  # 0.10
 
-
+                                      #poi abbiamo dei parameters che servono per computare la local trajectory -> deve fare una simulazione -> es. di solito il global path passa vicino agli obstacles, poi il local planner sistema la trajectory
 # Forward Simulation Parameters
   sim_time: 2.0       # 1.7 The amount of time to forward-simulate trajectories in seconds
   vx_samples: 3       # 3 The number of samples to use when exploring the x velocity space

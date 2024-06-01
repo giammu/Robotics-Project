@@ -7,8 +7,8 @@ define kinect ranger
     pose [ -0.1 0.0 -0.11 0.0 ]           
     size [0.1 0.1 0.1 ]
     range  [0 6.5]
-    fov 120.0                              #qua definiamo le caratteristiche del laserscanner
-    samples 640
+    fov 360.0                              #qua definiamo le caratteristiche del laserscanner
+    samples 1440              #l'importante è che il numero di samples sia 360*qualcosa
   )
   # generic model properties
   color "black"

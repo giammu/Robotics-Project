@@ -1,46 +1,72 @@
+Riprendiamo: slam toolbox, mapping e localization
 
-...comandi iniziali...
+faccio partire il nostro environment	
+	cd src/stage
+	rosrun stage_ros stageros maze.world 
+facciamo partire lo slam toolbox
+	roslaunch demo_mapping slam_toolbox.launch        -> questo utilizza i parameters mapper_params_online_async.yaml
+e poi: rviz (seleziono topdownortho, poi add>by topic > map)
+facciamo partire i comandi 
+	rosrun teleop_twist_keyboard teleop_twist_keyboard.py
 
--Come settare la mappa con slam_toolbox:
-in rviz faccio: Panels > add new panel > slam_toolbox
-E poi si apre una interfaccia per settare dei data con slam_toolbox
-...
-questo genera map.data e map.posegraph -> sono rappresentazioni più avanzate dell'environment
+Come faccio a salvare la mappa: l'abbiamo visto ieri -> otteniamo un png file, e possiamo usarlo con amcl per fare localization (scan matching)
+Siccome stiamo costruendo la mappa con lo slam approach, poossiamo salvarci anche una rappresetazione che tiene conto dei nodi del grafo, quindi è più accurato quando viene utilizzato
+Come salvo la rappresentation basata su graph slam? Ci sono 2 modi:
+-uso i services: che non funziona su ros1
+-uso i tool forniti direttamente da rviz:
+    in rviz faccio: Panels > add new panel > slamToolboxPlugin 
+    E poi si apre una interfaccia per settare dei data con slam_toolbox
+        Save Map: salva la image map
+        Serialize Map: è la mappa con la graph based rapresentation (nel campo di testo a destra metto il path di dove voglio salvare il file)
+        per vedere il path del folder faccio: 'cd/src' e poi 'pwd' nel terminale, poi lo copio e lo metto nel campo di testo
+        questo genera map.data e map.posegraph -> sono rappresentazioni più avanzate dell'environment
 
-Slam toolbox si può anche usare dopo per localization e per mapping
+Slam toolbox si può anche usare dopo per localization e per continuare a fare mapping (continue to building the map)
 
 ---------------------
-Vediamo come si usa per localization
+Vediamo ora come si usa per fare localization:
 
-...
-lancio demo_mapping slam_toolbox_localization.launch
-....
+vedi file: slam_toolbox_localization.launch
+
+poi devo setuppare slam_toolbox per lavorare correttamente in localizzazione
+    apri file: mapper_params_online_async_localization.yaml
+
+aggiungi anche il TF in rviz
+se eseguo slam_toolbox_localization.launch noto che ho già la mappa in rviz, ma non abbiamo lanciato il map server node
 
 -------------------
-Quindi abbiamo 2 modi per buildare la mappa e 2 modi per localization? nella mappa 
+Conclusione:
+Quindi abbiamo 2 modi per buildare la mappa e 2 modi per localization nella mappa
 -> nel progetto dobbiamo fare questo ma scegliere quello che performa meglio a seconda di che cosa devo fare
-
 ------------------
+
+Qui spiega ROS2, se interessato vedi registrazione da 21.00 a 1.09.00
+
+-----------------
 SECOND project
- dati: odometry + pointcloud
 
- ci fornisce un bag
- ho 2 topic nel bag
+è un omnidirectional robot con sopra un lidar 
 
- 1) fare il mapping, con 1 dei 2 metodi (non usare cartography)
- Scrivere un launchfile
- Ho bisogno qualcosa che converte da odometry a transform
+dati: odometry + pointcloud
 
- 2) devo navigare dentro alla mappa. Usare stage. Usare i dati del robot.
- Basta mettere i dati corretti del robot
- Setuppare dei goals
+ci fornisce un bag. per runnarlo usare: rosbag play --clock robotics2.bag
+contiene 2 topic nel bag: /ugv/odom è la odometry       
+                          /ugv/rslidar_points è la pointcloud del lidar
 
- Scrivere un nodo che permette al robot di muoversi
+1) Creare la mappa, con 1 dei 2 metodi (non usare cartographer, usare gmapping o slam toolbox)
+Scrivere un launchfile che starta tutto: i nodi per la data conversion se necessario, un tf per la conversione da odometry a tf, il mapping node, rviz con la sua configurazione ... vedi slide
+possiamo usare il package pointcloud_to laserscan per convertire la pointcloud in laserscan
 
- Il launchfile è simile al navigation di L9
+2) Devo navigare dentro alla mappa creata al punto 1. Usare stage. Usare i dati del robot.
+Basta mettere i dati corretti del robot: size and cinematic, omnidirectional
+Setuppare il navigation stack con dei goals per muoversi nell'environment. Scrivo un nodo che pubblica i goals leggendoli dal csv file.
+Il launchfile è simile al navigation di L9
 
- Fornire un map folder con la mappa che creo e l'immagine. Se uso slam mettere anche il serialized image
+3) Fornire un map folder con la mappa che creo e l'immagine png. (mandatorio per entrambi gli approcci)
+Se uso slam mettere anche il serialized map
 
- devo mettere il param del time nel launchfile
+info) Devo mettere il param del time nel launchfile: <param name="/use_sim_time" value="true"/>
+Prima provare manualmente il robot e solo dopo usare il csv
+Si può sistemare la mappa un pochino con paint
 
  

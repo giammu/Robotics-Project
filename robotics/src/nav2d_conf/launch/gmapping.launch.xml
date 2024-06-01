@@ -1,7 +1,7 @@
 <launch>
-  <arg name="scan_topic"  default="scan" />
-  <arg name="base_frame"  default="base_footprint"/>
-  <arg name="odom_frame"  default="odom"/>
+  <arg name="scan_topic"  default="scan" />           <!--questp va settato-->
+  <arg name="base_frame"  default="base_footprint"/>   <!-- questo va settato-->
+  <arg name="odom_frame"  default="odom"/>              <!-- questo va settato-->
 
   <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
     <param name="base_frame" value="$(arg base_frame)"/>
