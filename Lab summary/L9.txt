@@ -102,7 +102,7 @@ Possiamo vedere i topics che sono sulla network:
 for monitor the robot we not use cmd line to cancel, create and monitor: we have actionlib so we create an actionlib client to monitor the robot
 
 -----------------------------
-Ora vediamo come farlo senza avere una mappa già computata:
+Ora vediamo come fare navigation senza avere una mappa già computata:
 
 Se non ho la mappa, voglio usare uno slam algorithm
 Uso il gmapping invece di amcl
@@ -122,6 +122,8 @@ Ora vediamo come funziona gmapping:
 	in rviz: posso dare un goal al robot fuori dalla mappa
 	è lento e pesante perchè crea la mappa in real-time e computa la trajectory
 	l'obiettivo non è costruire una mappa perfetta, ma una mappa in cui il robot sia in grado di muoversi
+
+-----------------------------
 
 SLAM toolbox : è un package per graph based localization 
 	slam è un tool che funziona molto bene solo se ho fatto un buon tuning 

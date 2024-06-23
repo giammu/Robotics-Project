@@ -55,7 +55,7 @@ contiene 2 topic nel bag: /ugv/odom è la odometry
 
 1) Creare la mappa, con 1 dei 2 metodi (non usare cartographer, usare gmapping o slam toolbox)
 Scrivere un launchfile che starta tutto: i nodi per la data conversion se necessario, un tf per la conversione da odometry a tf, il mapping node, rviz con la sua configurazione ... vedi slide
-possiamo usare il package pointcloud_to laserscan per convertire la pointcloud in laserscan
+possiamo usare il package pointcloud_to_laserscan per convertire la pointcloud in laserscan
 
 2) Devo navigare dentro alla mappa creata al punto 1. Usare stage. Usare i dati del robot.
 Basta mettere i dati corretti del robot: size and cinematic, omnidirectional

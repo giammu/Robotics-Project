@@ -6,3 +6,7 @@ comandi.sh
 run_vnc.sh
 robotics/docker/run_vnc.sh
 robotics/comandi_docker.sh
+robotics/src/second_project/info.txt
+
+robotics/src/second_project/rviz/mapping_1_config.rviz
+robotics/src/second_project/rviz/mapping_2_config.rviz
