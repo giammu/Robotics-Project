@@ -25,7 +25,7 @@
     </node>
 
     <node pkg="slam_toolbox" type="async_slam_toolbox_node" name="slam_toolbox" output="screen">
-        <rosparam command="load" file="$(find second_project)/config/slam_toolbox_config.yaml" />
+        <rosparam command="load" file="$(find second_project)/config/slam_toolbox_mapping_config.yaml" />
     </node>
 
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find second_project)/rviz/config_mapping.rviz" /> <!---->

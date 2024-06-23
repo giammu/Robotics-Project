@@ -1,0 +1,12 @@
+global_costmap:
+   
+   global_frame: map                #specifico il reference frame
+   robot_base_frame: base_footprint 
+   update_frequency: 1.0
+   publish_frequency: 0.5
+   static_map: true
+   transform_tolerance: 0.5
+   plugins:         #posso creare dei specifici plugins 
+     - {name: static_layer,            type: "costmap_2d::StaticLayer"} #specifico che voglio uno static layer
+     - {name: inflation_layer,         type: "costmap_2d::InflationLayer"} #e voglio un inflation layer -> cioè voglio solo la mappa caricata da file senza l'area attorno agli ostacoli
+

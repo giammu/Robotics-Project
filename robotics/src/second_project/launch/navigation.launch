@@ -1,0 +1,121 @@
+<launch>
+  <arg name="base"       default="burger"/>  <!-- questo è uno dei simulated robot dentro standard turtlebot-->
+  
+  <!-- create_circles_asus_xtion_pro create_circles_kinect kobuki_hexagons_astra kobuki_hexagons_asus_xtion_pro kobuki_hexagons_asus_xtion_pro 
+kobuki_hexagons_kinect kobuki_hexagons_r200 roomba_circles_asus_xtion_pro roomba_circles_kinect -->
+
+    <!-- Name of the map to use and initial position -->
+    <arg name="map_file"       default="$(find second_project)/stage/map.yaml"/>  <!--definisco il map file.yaml-->
+    <arg name="world_file"     default="$(find second_project)/stage/map.world"/> <!--definisco il world file per lo stage quando parte-->
+    <arg name="initial_pose_x" default="0.0"/> <!--definisco la initial pose del robot-->
+    <arg name="initial_pose_y" default="0.0"/> 
+    <arg name="initial_pose_a" default="0.0"/>
+
+    <arg name="odom_frame_id"   default="odom"/> <!--definisco alcuni frame-->
+    <arg name="global_frame_id" default="map"/>
+        <arg name="base_frame_id"   default="base_footprint"/>
+        <arg name="scan_topic"      default="/base_scan"/>
+
+    <param name="/use_sim_time" value="true"/> <!--usiamo il simulated time: devo usarlo sicuramente nel progetto: singnifica che tutti i messaggi vengono generati con il timestamp che è dentro al file bag. (invece non cambia nulla se runno in real time)-->
+
+
+    <!--  ***************** Robot simulation *****************  -->
+    <node pkg="stage_ros" type="stageros" name="stageros" args="$(arg world_file)"> <!--passo il world file che definisce il world-->
+        <param name="base_watchdog_timeout" value="0.5"/>
+        <remap from="base_scan" to="scan"/> <!--facciamo remapping-->
+    </node>
+
+
+    <!--  ***************** Robot Model *****************  -->
+    <include file="$(find turtlebot3_bringup)/launch/includes/description.launch.xml"> <!--questo non è mandatorio,serve solo per avere un robot model dentro ad rviz-->
+        <arg name="model" value="$(arg base)" />
+    </include>
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+        <param name="use_gui" value="false"/>
+    </node>
+
+
+    <!--  ************** Navigation  ***************  -->
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen"> <!--il package è move base-->
+        <rosparam file="$(find second_project)/config/costmap_common_params.yaml" command="load" ns="global_costmap" /> <!--good practice: non mettere tutti i parameters nel launch file, ma avere un configuration file per ogni element-->
+        <rosparam file="$(find second_project)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />   <!--alcuni parametri sono condivisi tra i namespace local e global costmap-->
+        <rosparam file="$(find second_project)/config/local_costmap_params.yaml" command="load" />   
+        <rosparam file="$(find second_project)/config/global_costmap_params.yaml" command="load" />
+
+        <rosparam file="$(find second_project)/config/teb_local_planner_params.yaml" command="load" /> <!--faccio partire il local planner: teb è meglio per il progetto-->
+        <rosparam file="$(find second_project)/config/move_base_params.yaml" command="load" /> <!--carichiamo i parameters per il global planner--> 
+
+        <param name="base_global_planner" value="navfn/NavfnROS" />  <!--   planner  navfn/NavfnROS alternative  carrot_planner/CarrotPlanner --> <!--NavfnROS è il nuovo planner, CarrotPlanner è il vecchio-->
+        <param name="planner_frequency" value="1.0" /> <!--metto questi 2 parameters nel launch file perchè magari voglio cambiarli rapidamente-->
+        <param name="planner_patience" value="5.0" /> <!-- How long the planner will wait in seconds in an attempt to find a valid plan before space-clearing operations are performed.  -->
+
+        <param name="controller_frequency" value="5.0" /> <!--la frequenza è più alta perchè nel local planner potrei incontrare oggetti più vicini-->
+        <param name="controller_patience" value="5.0" /> <!-- How long the controller will wait in seconds without receiving a valid control before space-clearing operations are performed.  -->
+
+        <param name="clearing_rotation_allowed" value="true"/> <!--Significa che possiamo ruotare in-place, per altri tipi di robot potrebbe essere false-->
+    </node>
+
+
+    <!--  ****** Maps *****  -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"> <!--map_server prende come input la mappa e la pubblica sulla ros network-->
+                <!-- <param name="frame_id" value="map"/> --> 
+    </node>
+
+
+  <!--  ****** amcl *****  -->    <!--il nodo amcl ci serve per localizzare il robot sulla mappa-->
+    <node pkg="amcl" type="amcl" name="amcl">
+        <param name="scan_topic" value="scan"/> <!--scan l'abbiamo remappato prima-->
+        <param name="use_map_topic" value="true"/> <!--vero perchè abbiamo una mappa che viene pubblicata-->
+              
+        <!-- Publish scans from best pose at a max of 10 Hz -->
+        <param name="odom_model_type"           value="omni"/>      <!--setuppare l'odometry type: diff = differential drive, omni = omnidirectional robot-->
+        <param name="odom_alpha5"               value="0.1"/>         <!--tutti questi altri parameters: bisogna fare fine-tuning quando amcl non funziona-->
+        <param name="gui_publish_rate"          value="10.0"/>
+        <param name="laser_max_beams"             value="60"/>
+        <param name="laser_max_range"           value="12.0"/>
+        <param name="min_particles"             value="500"/>
+        <param name="max_particles"             value="2000"/>
+        <param name="kld_err"                   value="0.05"/>
+        <param name="kld_z"                     value="0.99"/>
+        <param name="odom_alpha1"               value="0.2"/>
+        <param name="odom_alpha2"               value="0.2"/>
+        <param name="odom_alpha3"               value="0.2"/>
+        <param name="odom_alpha4"               value="0.2"/>
+        <param name="laser_z_hit"               value="0.5"/>
+        <param name="laser_z_short"             value="0.05"/>
+        <param name="laser_z_max"               value="0.05"/>
+        <param name="laser_z_rand"              value="0.5"/>
+        <param name="laser_sigma_hit"           value="0.2"/>
+        <param name="laser_lambda_short"        value="0.1"/>
+        <param name="laser_model_type"          value="likelihood_field"/>
+        <!-- <param name="laser_model_type" value="beam"/> -->
+        <param name="laser_likelihood_max_dist" value="2.0"/>
+        <param name="update_min_d"              value="0.25"/>
+        <param name="update_min_a"              value="0.2"/>
+        <param name="odom_frame_id"             value="$(arg odom_frame_id)"/> 
+        <param name="base_frame_id"             value="$(arg base_frame_id)"/> 
+        <param name="global_frame_id"           value="$(arg global_frame_id)"/>
+        <param name="resample_interval"         value="1"/>
+        <!-- Increase tolerance because the computer can get quite busy -->
+        <param name="transform_tolerance"       value="1.0"/>           <!--di questo voglio fare fine tuning a seconda di quanto va veloce: di solito c'è un lag tra le trasformazioni, se il lag è troppo grande le tf vengono scartate. questo parameter setta la tolleranza, cioè il delta che sono disposto a tollerare, quindi se vengono scartati i tf devo aumentarlo -->
+        <param name="recovery_alpha_slow"       value="0.0"/>
+        <param name="recovery_alpha_fast"       value="0.0"/>
+        <param name="initial_pose_x"            value="$(arg initial_pose_x)"/>
+        <param name="initial_pose_y"            value="$(arg initial_pose_y)"/>
+        <param name="initial_pose_a"            value="$(arg initial_pose_a)"/>
+    </node>
+
+
+
+    <!--  **************** Visualisation ****************  -->
+    <node name="rviz" pkg="rviz" type="rviz" /> <!--args="-d $(find second_project)/rviz/robot_navigation.rviz"-->
+
+    <!--  ****** Goals *****  -->
+    <node name="navigation" pkg="second_project" type="navigation" output="screen">
+        <param name="waypoints" value="$(find second_project)/waypoints.csv"/>
+    </node>
+
+
+</launch>
+
+
