@@ -10,3 +10,8 @@ robotics/src/second_project/info.txt
 
 robotics/src/second_project/rviz/mapping_1_config.rviz
 robotics/src/second_project/rviz/mapping_2_config.rviz
+
+robotics/src/second_project/map/map.data
+robotics/src/second_project/map/map.posegraph
+
+

@@ -9,11 +9,20 @@
         <remap from="cloud_in" to="/ugv/rslidar_points"/>
         <remap from="scan" to="/base_scan"/>
         <rosparam> <!--Modello Lidar: Robosense Helios-->
-        
+            target_frame: base_footprint
+            transform_tolerance: 0.01
+            min_height: 0.0 <!--Considero oggetti dal suolo fino a 1 metro dal suolo-->
+            max_height: 1.0
+            angle_min: -3.141592 <!--Da meno pi greco a più pi greco sono 360 gradi-->
+            angle_max: 3.141592
+            angle_increment: 0.0013962631 <!-- = 2*pigreco/numero di scansioni per giro, che qui è 4500-->
+            scan_time: 0.0
+            range_min: 0.2 <!--il blind spot è sotto agli 0.2 metri-->
+            range_max: 150.0 <!--arriva fino a 110/150 metri-->
+            use_inf: true
+            concurrency_level: 1
         </rosparam>
     </node>
-
-    <!-- <remap from="base_scan" to="scan" /> -->
 
     <node pkg="slam_toolbox" type="async_slam_toolbox_node" name="slam_toolbox" output="screen">
         <rosparam command="load" file="$(find second_project)/config/slam_toolbox_config.yaml" />
@@ -24,10 +33,6 @@
     <node type="rqt_graph" name="rqt_graph" pkg="rqt_graph"  />
     <node type="rqt_tf_tree" name="rqt_tf_tree" pkg="rqt_tf_tree"  />
 
-
-
-<node pkg="tf2_ros" type="static_transform_publisher" name="base_link"  args=" 0  0 0  0 0 0 1 base_footprint base_link"/>
 <node pkg="tf2_ros" type="static_transform_publisher" name="rslidar"  args=" 0  0 0  0 0 0 1 base_footprint rslidar"/>
-
 
 </launch>
