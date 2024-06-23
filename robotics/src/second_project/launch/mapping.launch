@@ -30,8 +30,8 @@
 
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find second_project)/rviz/config_mapping.rviz" /> <!---->
 
-    <node type="rqt_graph" name="rqt_graph" pkg="rqt_graph"  />
-    <node type="rqt_tf_tree" name="rqt_tf_tree" pkg="rqt_tf_tree"  />
+    <!-- <node type="rqt_graph" name="rqt_graph" pkg="rqt_graph"  />-->
+    <!-- <node type="rqt_tf_tree" name="rqt_tf_tree" pkg="rqt_tf_tree"  />-->
 
 <node pkg="tf2_ros" type="static_transform_publisher" name="rslidar"  args=" 0  0 0  0 0 0 1 base_footprint rslidar"/>
 

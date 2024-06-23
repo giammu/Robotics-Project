@@ -15,7 +15,7 @@ private:
         
 public: 
     tf_sub_pub() {
-        sub = n.subscribe("/ugv/odom", 1000, &tf_sub_pub::callback, this); 
+        sub = n.subscribe("/ugv/odom", 1, &tf_sub_pub::callback, this); 
     }
 
     void callback(const nav_msgs::Odometry::ConstPtr& msg) {
