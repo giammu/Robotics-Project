@@ -67,7 +67,7 @@ apri file: move_base_params.yaml
 
 ----------------------
 Proviamolo:
-	rosrun nav2d_conf turtlebot_amcl.launch
+	roslaunch nav2d_conf turtlebot_amcl.launch
 	nel terminale vedo il debug di quello che sta succedendo
 
 Mostra nella VNC una mappa, so che il robot si trova nel cerchio dentro nuvola verde

@@ -13,8 +13,8 @@ kobuki_hexagons_kinect kobuki_hexagons_r200 roomba_circles_asus_xtion_pro roomba
 
     <arg name="odom_frame_id"   default="odom"/> <!--definisco alcuni frame-->
     <arg name="global_frame_id" default="map"/>
-        <arg name="base_frame_id"   default="base_footprint"/>
-        <arg name="scan_topic"      default="/base_scan"/>
+        <arg name="base_frame_id"   default="base_footprint"/> 
+        <arg name="scan_topic"      default="/base_scan"/> 
 
     <param name="/use_sim_time" value="true"/> <!--usiamo il simulated time: devo usarlo sicuramente nel progetto: singnifica che tutti i messaggi vengono generati con il timestamp che è dentro al file bag. (invece non cambia nulla se runno in real time)-->
 
@@ -42,7 +42,7 @@ kobuki_hexagons_kinect kobuki_hexagons_r200 roomba_circles_asus_xtion_pro roomba
         <rosparam file="$(find second_project)/config/local_costmap_params.yaml" command="load" />   
         <rosparam file="$(find second_project)/config/global_costmap_params.yaml" command="load" />
 
-        <rosparam file="$(find second_project)/config/teb_local_planner_params.yaml" command="load" /> <!--faccio partire il local planner: teb è meglio per il progetto-->
+        <rosparam file="$(find second_project)/config/dwa_local_planner_params.yaml" command="load" /> <!--faccio partire il local planner: teb è meglio per il progetto-->
         <rosparam file="$(find second_project)/config/move_base_params.yaml" command="load" /> <!--carichiamo i parameters per il global planner--> 
 
         <param name="base_global_planner" value="navfn/NavfnROS" />  <!--   planner  navfn/NavfnROS alternative  carrot_planner/CarrotPlanner --> <!--NavfnROS è il nuovo planner, CarrotPlanner è il vecchio-->
@@ -58,7 +58,7 @@ kobuki_hexagons_kinect kobuki_hexagons_r200 roomba_circles_asus_xtion_pro roomba
 
     <!--  ****** Maps *****  -->
     <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"> <!--map_server prende come input la mappa e la pubblica sulla ros network-->
-                <!-- <param name="frame_id" value="map"/> --> 
+                <param name="frame_id" value="map"/>
     </node>
 
 
@@ -108,12 +108,22 @@ kobuki_hexagons_kinect kobuki_hexagons_r200 roomba_circles_asus_xtion_pro roomba
 
 
     <!--  **************** Visualisation ****************  -->
-    <node name="rviz" pkg="rviz" type="rviz" /> <!--args="-d $(find second_project)/rviz/robot_navigation.rviz"-->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find second_project)/rviz/config_navigation.rviz"  />
 
     <!--  ****** Goals *****  -->
     <node name="navigation" pkg="second_project" type="navigation" output="screen">
         <param name="waypoints" value="$(find second_project)/waypoints.csv"/>
     </node>
+
+
+    <!-- ALTRO AGGIUNTO PER IL DEBUGGING-->
+
+     <!-- <node type="rqt_tf_tree" name="rqt_tf_tree" pkg="rqt_tf_tree"  /> -->
+     <!-- <node type="rqt_graph" name="rqt_graph" pkg="rqt_graph"  /> -->
+     
+     <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="rslidar"  args=" 0  0 0  0 0 0 1 base_footprint rslidar"/> --> 
+
+    
 
 
 </launch>

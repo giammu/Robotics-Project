@@ -42,6 +42,24 @@ Slide of the [second](Slide%20Lab/Project_2) project
 
 ### How to run it
 
+The steps are the same as before, but this time the launch file and the bag file are different
+
+#### Mapping
+
+<img src="Videos/project_2_1.gif">
+
+For the mapping part, in the first pane run `cd src/bags` and then run `rosbag play --clock robotics2.bag`
+
+Move to the other pane and run `roslaunch second_project mapping.launch`
+
+#### Navigation
+
+<img src="Videos/project_2_2.gif">
+
+For the navigation part, stop the execution of mapping with `Ctrl+C` for both the launch file and the bag file
+
+Run `roslaunch second_project navigation.launch`
+
 # Useful Files
 
 - [Summary of Laboratory Classes](Lab%20summary)
@@ -54,7 +72,7 @@ Slide of the [second](Slide%20Lab/Project_2) project
 
 Install docker from [here](https://docs.docker.com/engine/install/)
 
-Then to check if docker is running, run `docker run hello-world`
+Then, to check if docker is running, run `docker run hello-world`
 
 Head to the folder `robotics/docker` and then run `./build.sh`
 

@@ -66,8 +66,6 @@ public:
       as_.setSucceeded(result_);          //Fa 2 cose: pubblica il risultato sulla ros network, e setta lo stato del server come succeded 
     }
   }
-
-
 };
 
 
